@@ -13,13 +13,13 @@ public class JavaShorts implements Shorts{
 
 	private static Logger Log = Logger.getLogger(JavaShorts.class.getName());
 	
-	private int id = 0;
+	private int shortId = 1;
+	private int blobId = 1;
 	
 	@Override
 	public Result<Short> createShort(String userId, String pwd) {
 		Log.info("createShort : user = " + userId + "; pwd = " + pwd);
-		
-		Short s = new Short(String.valueOf(id++), userId, "blob.txt");
+		Short s = new Short(String.valueOf(shortId++), userId, "Blobs/blob"+ blobId +".txt");
 		
 		Hibernate.getInstance().persist(s);
 		
@@ -60,10 +60,6 @@ public class JavaShorts implements Shorts{
 		
 		
 		var query = Hibernate.getInstance().sql("SELECT s.shortId FROM Short s WHERE s.userId = '" + userId + "'", String.class);
-		if(query.isEmpty()) {
-			Log.info("User does not exist.");
-			return Result.error( ErrorCode.NOT_FOUND);
-		}
 		
 		return Result.ok(query);
 	}
@@ -81,15 +77,55 @@ public class JavaShorts implements Shorts{
 	}
 
 	@Override
-	public Result<Void> like(String shortId, String userId, boolean isLiked, String password) {
-		// TODO Auto-generated method stub
-		return null;
+	public Result<Void> like(String shortId, String userId, boolean isLiked, String pwd) {
+		Log.info("like : shortId = " + shortId + " ; userId = " + userId + " ; isLiked = " + isLiked + " ; pwd = " + pwd);
+		
+		if(shortId == null) {
+			Log.info("ShortId null.");
+			return Result.error( ErrorCode.BAD_REQUEST);
+		}
+		var query = Hibernate.getInstance().sql("SELECT s FROM Short s WHERE s.shortId = '" + shortId + "'", Short.class);
+		if(query.isEmpty()) {
+			Log.info("Short does not exist.");
+			return Result.error( ErrorCode.NOT_FOUND);
+		}
+		
+		Short s = query.get(0);
+		List<String> likedBy = s.getLikedBy();
+		if(!likedBy.contains(userId) && !isLiked) {
+			Log.info("The like being removed does not exist.");
+			return Result.error( ErrorCode.NOT_FOUND);
+		}
+		
+		if(likedBy.contains(userId) && isLiked) {
+			Log.info("The like already exists.");
+			return Result.error( ErrorCode.CONFLICT);
+		}
+		
+		if(isLiked) {
+			likedBy.add(userId);
+			s.setTotalLikes(s.getTotalLikes()+1);
+		}
+		else {
+			likedBy.remove(userId);
+			s.setTotalLikes(s.getTotalLikes()-1);
+		}
+		s.setLikedBy(likedBy);
+		Hibernate.getInstance().update(s);
+		return Result.ok();
 	}
 
 	@Override
-	public Result<List<String>> likes(String shortId, String password) {
-		// TODO Auto-generated method stub
-		return null;
+	public Result<List<String>> likes(String shortId, String pwd) {
+		Log.info("likes : shortId = " + shortId + " ; pwd = " + pwd);
+		
+		var query = Hibernate.getInstance().sql("SELECT s FROM Short s WHERE s.shortId = '" + shortId + "'", Short.class);
+		if(query.isEmpty()) {
+			Log.info("Short does not exist.");
+			return Result.error( ErrorCode.NOT_FOUND);
+		}
+		
+		return Result.ok(query.get(0).getLikedBy());
 	}
 
 	@Override
