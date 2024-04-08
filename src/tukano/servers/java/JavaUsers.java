@@ -1,19 +1,16 @@
 package tukano.servers.java;
 
-import java.util.ArrayList;
-import java.util.HashMap;
+
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.logging.Logger;
 
 import tukano.api.User;
 import tukano.api.java.Result;
 import tukano.api.java.Result.ErrorCode;
+import tukano.persistence.Hibernate;
 import tukano.api.java.Users;
 
 public class JavaUsers implements Users{
-	private final Map<String,User> users = new HashMap<>();
 
 	private static Logger Log = Logger.getLogger(JavaUsers.class.getName());
 
@@ -27,11 +24,13 @@ public class JavaUsers implements Users{
 			return Result.error( ErrorCode.BAD_REQUEST);
 		}
 		
-		// Insert user, checking if name already exists
-		if( users.putIfAbsent(user.userId(), user) != null ) {
+		var query = Hibernate.getInstance().sql("SELECT u FROM User u WHERE u.userId = '" + user.getUserId() + "'", User.class);
+		if(!query.isEmpty()) {
 			Log.info("User already exists.");
 			return Result.error( ErrorCode.CONFLICT);
 		}
+		Hibernate.getInstance().persist(user);
+		
 		return Result.ok( user.userId() );
 	}
 
@@ -45,13 +44,12 @@ public class JavaUsers implements Users{
 			return Result.error( ErrorCode.BAD_REQUEST);
 		}
 		
-		User user = users.get(userId);			
-		// Check if user exists 
-		if( user == null ) {
+		var query = Hibernate.getInstance().sql("SELECT u FROM User u WHERE u.userId = '" + userId + "'", User.class);
+		if(query.isEmpty()) {
 			Log.info("User does not exist.");
 			return Result.error( ErrorCode.NOT_FOUND);
 		}
-		
+		User user = query.get(0);
 		//Check if the password is correct
 		if( !user.pwd().equals( pwd)) {
 			Log.info("Password is incorrect.");
@@ -71,23 +69,23 @@ public class JavaUsers implements Users{
 			return Result.error( ErrorCode.BAD_REQUEST);
 		}
 				
-		// Check if user exists 
-		if( users.get(userId) == null ) {
+		var query = Hibernate.getInstance().sql("SELECT u FROM User u WHERE u.userId = '" + userId + "'", User.class);
+		if(query.isEmpty()) {
 			Log.info("User does not exist.");
 			return Result.error( ErrorCode.NOT_FOUND);
 		}
-		
+		User u = query.get(0);
 		//Check if the password is correct
-		if( !user.pwd().equals( pwd)) {
+		if( !u.pwd().equals( pwd)) {
 			Log.info("Password is incorrect.");
 			return Result.error( ErrorCode.FORBIDDEN);
 		}
-		User updatedUser = users.get(userId);
-		if(user.getDisplayName() != null)updatedUser.setDisplayName(user.getDisplayName());
-		if(user.getEmail() != null)updatedUser.setEmail(user.getEmail());
-		if(user.getPwd() != null)updatedUser.setPwd(user.getPwd());
+		if(user.getDisplayName() != null)u.setDisplayName(user.getDisplayName());
+		if(user.getEmail() != null)u.setEmail(user.getEmail());
+		if(user.getPwd() != null)u.setPwd(user.getPwd());
+		Hibernate.getInstance().update(u);
 		
-		return Result.ok(users.get(userId));
+		return Result.ok(u);
 	}
 
 	@Override
@@ -100,42 +98,62 @@ public class JavaUsers implements Users{
 			return Result.error( ErrorCode.BAD_REQUEST);
 		}
 		
-		User user = users.get(userId);			
-		// Check if user exists 
-		if( user == null ) {
+		// Check if user is valid
+		if(userId == null || pwd == null) {
+			Log.info("Name or Password null.");
+			return Result.error( ErrorCode.BAD_REQUEST);
+		}
+				
+		var query = Hibernate.getInstance().sql("SELECT u FROM User u WHERE u.userId = '" + userId + "'", User.class);
+		if(query.isEmpty()) {
 			Log.info("User does not exist.");
 			return Result.error( ErrorCode.NOT_FOUND);
 		}
-		
+		User u = query.get(0);
 		//Check if the password is correct
-		if( !user.pwd().equals( pwd)) {
+		if( !u.pwd().equals( pwd)) {
 			Log.info("Password is incorrect.");
 			return Result.error( ErrorCode.FORBIDDEN);
 		}
 		
-		users.remove(userId);
+		Hibernate.getInstance().delete(u);
 		
-		return Result.ok(user);
+		return Result.ok(u);
 	}
 
 	@Override
 	public Result<List<User>> searchUsers(String pattern) {
-        Log.info("searchUsers : pattern = " + pattern);
-
+		Log.info("searchUsers : pattern = " + pattern);
 		// Check if pattern is valid
 		if(pattern == null) {
 			Log.info("Pattern null.");
 			return Result.error( ErrorCode.BAD_REQUEST);
 		}
 		
-		List<User> result = new ArrayList<User>();
-		for (Entry<String, User> entry : users.entrySet()) {
-	        if (entry.getKey().toUpperCase().startsWith(pattern.toUpperCase())) {
-	        	User u = entry.getValue();
-	            result.add(new User(u.getUserId(),"",u.getEmail(),u.getDisplayName()));
-	        }
-	    }
-		return Result.ok(result);
+		var query = Hibernate.getInstance().sql("SELECT u FROM User u WHERE u.userId LIKE '%" + pattern + "%'", User.class);
+		
+		return Result.ok(query);
+	}
+	
+	public Result<Void> checkPassword(String userId, String pwd){
+		Log.info("checkPassword : userId = " + userId + "; pwd = " + pwd);
+		// Check if user is valid
+		if(userId == null || pwd == null) {
+			Log.info("Name or Password null.");
+			return Result.error( ErrorCode.BAD_REQUEST);
+		}
+		var query = Hibernate.getInstance().sql("SELECT u FROM User u WHERE u.userId = '" + userId + "'", User.class);
+		if(query.isEmpty()) {
+			Log.info("User does not exist.");
+			return Result.error( ErrorCode.NOT_FOUND);
+		}
+		User u = query.get(0);
+		//Check if the password is correct
+		if( !u.pwd().equals( pwd)) {
+			Log.info("Password is incorrect.");
+			return Result.error( ErrorCode.FORBIDDEN);
+		}
+		return Result.ok();
 	}
 
 }
