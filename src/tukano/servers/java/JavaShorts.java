@@ -21,7 +21,7 @@ public class JavaShorts implements Shorts{
 	@Override
 	public Result<Short> createShort(String userId, String pwd) {
 		Log.info("createShort : user = " + userId + "; pwd = " + pwd);
-		Short s = new Short(String.valueOf(shortId++), userId, "Blobs/blob"+ blobId +".txt");
+		Short s = new Short(String.valueOf(shortId++), userId, "Blobs/blob"+ blobId++);
 		
 		Hibernate.getInstance().persist(s);
 		

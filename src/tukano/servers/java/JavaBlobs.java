@@ -20,7 +20,7 @@ public class JavaBlobs implements Blobs{
 	public Result<Void> upload(String blobId, byte[] bytes){
 		Log.info("upload : blobId = " + blobId + "; bytes = " + bytes);
 		
-		File blob = new File("blob" + blobId + ".txt");
+		File blob = new File("Blobs/blob" + blobId);
 		try {
 			if (blob.createNewFile()) {
 				FileOutputStream outputStream = new FileOutputStream(blob);
@@ -47,7 +47,7 @@ public class JavaBlobs implements Blobs{
 	public Result<byte[]> download(String blobId) {
 		Log.info("download : blobId = " + blobId);
 		
-		File blob = new File("blob" + blobId + ".txt");
+		File blob = new File("Blobs/blob" + blobId);
 		byte[] bytes = new byte[(int) blob.length()];
 		
 		try(FileInputStream fis = new FileInputStream(blob)) {
