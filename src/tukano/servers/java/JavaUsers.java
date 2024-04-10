@@ -97,12 +97,6 @@ public class JavaUsers implements Users{
 			Log.info("Name or Password null.");
 			return Result.error( ErrorCode.BAD_REQUEST);
 		}
-		
-		// Check if user is valid
-		if(userId == null || pwd == null) {
-			Log.info("Name or Password null.");
-			return Result.error( ErrorCode.BAD_REQUEST);
-		}
 				
 		var query = Hibernate.getInstance().sql("SELECT u FROM User u WHERE u.userId = '" + userId + "'", User.class);
 		if(query.isEmpty()) {
