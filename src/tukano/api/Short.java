@@ -84,6 +84,7 @@ public class Short {
 	public List<String> getLikedBy() {
 		return likedBy;
 	}
+
 	public void setLikedBy(List<String> likedBy) {
 		this.likedBy = likedBy;
 	}

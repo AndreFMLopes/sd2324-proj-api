@@ -11,7 +11,7 @@ import tukano.api.java.Shorts;
 import tukano.persistence.Hibernate;
 import tukano.api.java.Result.ErrorCode;
 
-public class JavaShorts implements Shorts{
+public class JavaShorts implements Shorts {
 
 	private static Logger Log = Logger.getLogger(JavaShorts.class.getName());
 	
