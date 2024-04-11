@@ -1,7 +1,5 @@
 package tukano.servers.grpc;
 
-import static tukano.impl.grpc.common.DataModelAdaptor.Short_to_GrpcShort;
-
 import com.google.protobuf.ByteString;
 import io.grpc.BindableService;
 import io.grpc.ServerServiceDefinition;
@@ -16,7 +14,6 @@ import tukano.impl.grpc.generated_java.BlobsProtoBuf.DownloadArgs;
 import tukano.impl.grpc.generated_java.BlobsProtoBuf.DownloadResult;
 import tukano.servers.java.JavaBlobs;
 
-import java.util.List;
 
 public class GrpcBlobsServerStub implements BlobsGrpc.AsyncService, BindableService {
 
