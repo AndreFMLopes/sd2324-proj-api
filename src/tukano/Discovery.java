@@ -129,7 +129,6 @@ class DiscoveryImpl implements Discovery {
 
 						var parts = msg.split(DELIMITER);
 						if (parts.length == 2) {
-							// TODO: complete by storing the decoded announcements...
 							var serviceName = parts[0];
 							var uri = URI.create(parts[1]);
 
