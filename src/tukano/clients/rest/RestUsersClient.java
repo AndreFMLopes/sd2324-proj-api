@@ -3,6 +3,7 @@ package tukano.clients.rest;
 import java.net.URI;
 import java.util.List;
 
+import jakarta.ws.rs.core.GenericType;
 import org.glassfish.jersey.client.ClientConfig;
 
 import jakarta.ws.rs.client.Client;
@@ -20,7 +21,6 @@ import tukano.api.rest.RestUsers;
 
 public class RestUsersClient implements Users{
 
-
 	final URI serverURI;
 	final Client client;
 	final ClientConfig config;
@@ -30,6 +30,7 @@ public class RestUsersClient implements Users{
 	public RestUsersClient( URI serverURI ) {
 		this.serverURI = serverURI;
 		this.config = new ClientConfig();
+
 		this.client = ClientBuilder.newClient(config);
 
 		target = client.target( serverURI ).path( RestUsers.PATH );
@@ -38,6 +39,7 @@ public class RestUsersClient implements Users{
 	@Override
 	public Result<String> createUser(User user) {
 		Response r = target.request()
+				.accept(MediaType.APPLICATION_JSON)
 				.post(Entity.entity(user, MediaType.APPLICATION_JSON));
 
 		var status = r.getStatus();
@@ -78,6 +80,7 @@ public class RestUsersClient implements Users{
 	public Result<User> updateUser(String userId, String pwd, User user) {
 		Response r = target.path(userId)
 						.queryParam(RestUsers.PWD, pwd).request()
+						.accept(MediaType.APPLICATION_JSON)
 						.put(Entity.entity(user, MediaType.APPLICATION_JSON));
 
 		var status = r.getStatus();
@@ -101,7 +104,6 @@ public class RestUsersClient implements Users{
 			return Result.ok( r.readEntity( User.class ));
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
 	public Result<List<User>> searchUsers(String pattern) {
 		Response r = target.queryParam(RestUsers.QUERY, pattern)
@@ -111,7 +113,7 @@ public class RestUsersClient implements Users{
 		if( status != Status.OK.getStatusCode() )
 			return Result.error( getErrorCodeFrom(status));
 		else
-			return Result.ok( r.readEntity( List.class ));
+			return Result.ok( r.readEntity( new GenericType<List<User>>() {}));
 	}
 
 	public static ErrorCode getErrorCodeFrom(int status) {
