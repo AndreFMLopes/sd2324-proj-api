@@ -23,8 +23,8 @@ public class JavaUsers implements Users{
 			Log.info("User object invalid.");
 			return Result.error( ErrorCode.BAD_REQUEST);
 		}
-		
-		var query = Hibernate.getInstance().sql("SELECT u FROM User u WHERE u.userId = '" + user.getUserId() + "'", User.class);
+
+		var query = Hibernate.getInstance().jpql("SELECT u FROM User u WHERE u.userId = '" + user.getUserId() + "'", User.class);
 		if(!query.isEmpty()) {
 			Log.info("User already exists.");
 			return Result.error( ErrorCode.CONFLICT);
@@ -44,7 +44,7 @@ public class JavaUsers implements Users{
 			return Result.error( ErrorCode.BAD_REQUEST);
 		}
 		
-		var query = Hibernate.getInstance().sql("SELECT u FROM User u WHERE u.userId = '" + userId + "'", User.class);
+		var query = Hibernate.getInstance().jpql("SELECT u FROM User u WHERE u.userId = '" + userId + "'", User.class);
 		if(query.isEmpty()) {
 			Log.info("User does not exist.");
 			return Result.error( ErrorCode.NOT_FOUND);
@@ -69,7 +69,7 @@ public class JavaUsers implements Users{
 			return Result.error( ErrorCode.BAD_REQUEST);
 		}
 				
-		var query = Hibernate.getInstance().sql("SELECT u FROM User u WHERE u.userId = '" + userId + "'", User.class);
+		var query = Hibernate.getInstance().jpql("SELECT u FROM User u WHERE u.userId = '" + userId + "'", User.class);
 		if(query.isEmpty()) {
 			Log.info("User does not exist.");
 			return Result.error( ErrorCode.NOT_FOUND);
@@ -98,7 +98,7 @@ public class JavaUsers implements Users{
 			return Result.error( ErrorCode.BAD_REQUEST);
 		}
 				
-		var query = Hibernate.getInstance().sql("SELECT u FROM User u WHERE u.userId = '" + userId + "'", User.class);
+		var query = Hibernate.getInstance().jpql("SELECT u FROM User u WHERE u.userId = '" + userId + "'", User.class);
 		if(query.isEmpty()) {
 			Log.info("User does not exist.");
 			return Result.error( ErrorCode.NOT_FOUND);
@@ -124,7 +124,7 @@ public class JavaUsers implements Users{
 			return Result.error( ErrorCode.BAD_REQUEST);
 		}
 		
-		var query = Hibernate.getInstance().sql("SELECT u FROM User u WHERE u.userId LIKE '%" + pattern + "%'", User.class);
+		var query = Hibernate.getInstance().jpql("SELECT u FROM User u WHERE u.userId LIKE '%" + pattern + "%'", User.class);
 		
 		return Result.ok(query);
 	}
@@ -136,7 +136,7 @@ public class JavaUsers implements Users{
 			Log.info("Name or Password null.");
 			return Result.error( ErrorCode.BAD_REQUEST);
 		}
-		var query = Hibernate.getInstance().sql("SELECT u FROM User u WHERE u.userId = '" + userId + "'", User.class);
+		var query = Hibernate.getInstance().jpql("SELECT u FROM User u WHERE u.userId = '" + userId + "'", User.class);
 		if(query.isEmpty()) {
 			Log.info("User does not exist.");
 			return Result.error( ErrorCode.NOT_FOUND);

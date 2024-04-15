@@ -32,7 +32,7 @@ public class JavaShorts implements Shorts {
 	public Result<Void> deleteShort(String shortId, String pwd) {
 		Log.info("deleteShort : shortId = " + shortId + "; pwd = " + pwd);
 		
-		var query = Hibernate.getInstance().sql("SELECT s FROM Short s WHERE s.shortId = '" + shortId + "'", Short.class);
+		var query = Hibernate.getInstance().jpql("SELECT s FROM Short s WHERE s.shortId = '" + shortId + "'", Short.class);
 		if(query.isEmpty()) {
 			Log.info("Short does not exist.");
 			return Result.error( ErrorCode.NOT_FOUND);
@@ -47,7 +47,7 @@ public class JavaShorts implements Shorts {
 	public Result<Short> getShort(String shortId) {
 		Log.info("getShort : shortId = " + shortId);
 		
-		var query = Hibernate.getInstance().sql("SELECT s FROM Short s WHERE s.shortId = '" + shortId + "'", Short.class);
+		var query = Hibernate.getInstance().jpql("SELECT s FROM Short s WHERE s.shortId = '" + shortId + "'", Short.class);
 		if(query.isEmpty()) {
 			Log.info("Short does not exist.");
 			return Result.error( ErrorCode.NOT_FOUND);
@@ -61,7 +61,7 @@ public class JavaShorts implements Shorts {
 	public Result<List<String>> getShorts(String userId) {
 		
 		
-		var query = Hibernate.getInstance().sql("SELECT s.shortId FROM Short s WHERE s.ownerId = '" + userId + "'", String.class);
+		var query = Hibernate.getInstance().jpql("SELECT s.shortId FROM Short s WHERE s.ownerId = '" + userId + "'", String.class);
 		
 		return Result.ok(query);
 	}
@@ -70,8 +70,8 @@ public class JavaShorts implements Shorts {
 	public Result<Void> follow(String userId1, String userId2, boolean isFollowing, String pwd) {
 		Log.info("follow : userId1 = " + userId1 + " ; userId2 = " + userId2 + " ; isFollowing = " + isFollowing + " ; pwd = " + pwd);
 		
-		var query = Hibernate.getInstance().sql("SELECT f FROM Follow f WHERE f.followedUserId = '" + userId2 + "'", Follow.class);
-		var query2 = Hibernate.getInstance().sql("SELECT f FROM Follow f WHERE f.followedUserId = '" + userId1 + "'", Follow.class);
+		var query = Hibernate.getInstance().jpql("SELECT f FROM Follow f WHERE f.followedUserId = '" + userId2 + "'", Follow.class);
+		var query2 = Hibernate.getInstance().jpql("SELECT f FROM Follow f WHERE f.followedUserId = '" + userId1 + "'", Follow.class);
 		Follow f = query.get(0);
 		List<String> followers = f.getFollowers();
 		Follow f2 = query2.get(0);
@@ -98,7 +98,7 @@ public class JavaShorts implements Shorts {
 	public Result<List<String>> followers(String userId, String pwd) {
 		Log.info("followers : userId = " + userId + " ; pwd = " + pwd);
 		
-		var query = Hibernate.getInstance().sql("SELECT f FROM Follow f WHERE f.followedUserId = '" + userId + "'", Follow.class);
+		var query = Hibernate.getInstance().jpql("SELECT f FROM Follow f WHERE f.followedUserId = '" + userId + "'", Follow.class);
 		
 		return Result.ok(query.get(0).getFollowers());
 	}
@@ -111,7 +111,7 @@ public class JavaShorts implements Shorts {
 			Log.info("ShortId null.");
 			return Result.error( ErrorCode.BAD_REQUEST);
 		}
-		var query = Hibernate.getInstance().sql("SELECT s FROM Short s WHERE s.shortId = '" + shortId + "'", Short.class);
+		var query = Hibernate.getInstance().jpql("SELECT s FROM Short s WHERE s.shortId = '" + shortId + "'", Short.class);
 		if(query.isEmpty()) {
 			Log.info("Short does not exist.");
 			return Result.error( ErrorCode.NOT_FOUND);
@@ -146,7 +146,7 @@ public class JavaShorts implements Shorts {
 	public Result<List<String>> likes(String shortId, String pwd) {
 		Log.info("likes : shortId = " + shortId + " ; pwd = " + pwd);
 		
-		var query = Hibernate.getInstance().sql("SELECT s FROM Short s WHERE s.shortId = '" + shortId + "'", Short.class);
+		var query = Hibernate.getInstance().jpql("SELECT s FROM Short s WHERE s.shortId = '" + shortId + "'", Short.class);
 		if(query.isEmpty()) {
 			Log.info("Short does not exist.");
 			return Result.error( ErrorCode.NOT_FOUND);
@@ -159,12 +159,12 @@ public class JavaShorts implements Shorts {
 	public Result<List<String>> getFeed(String userId, String pwd) {
 		Log.info("getFeed : userId = " + userId + " ; pwd = " + pwd);
 		
-		var query = Hibernate.getInstance().sql("SELECT f FROM Follow f WHERE f.followedUserId = '" + userId + "'", Follow.class);
+		var query = Hibernate.getInstance().jpql("SELECT f FROM Follow f WHERE f.followedUserId = '" + userId + "'", Follow.class);
 		List<String> follows = query.get(0).getFollows();
 		
 		List<String> shorts = new ArrayList<String>();
 		for(String id : follows) {
-			var query2 = Hibernate.getInstance().sql("SELECT s FROM Short s WHERE s.ownerId = '" + id + "'", Short.class);
+			var query2 = Hibernate.getInstance().jpql("SELECT s FROM Short s WHERE s.ownerId = '" + id + "'", Short.class);
 			shorts.add(query2.get(0).getShortId());
 		}
 		
