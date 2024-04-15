@@ -1,12 +1,15 @@
 package tukano.servers.grpc;
 
 import io.grpc.ServerBuilder;
+import tukano.Discovery;
 import tukano.api.java.Shorts;
 
 import java.net.InetAddress;
 import java.util.logging.Logger;
 
 public class GrpcShortsServer {
+
+    public static final String SERVICE = "ShortsService";
 
     public static final int PORT = 9001;
 
@@ -22,6 +25,11 @@ public class GrpcShortsServer {
         var serverURI = String.format(SERVER_BASE_URI, InetAddress.getLocalHost().getHostAddress(), PORT, GRPC_CTX);
 
         Log.info(String.format("%s gRPC Server Ready @ %s\n", Shorts.NAME, serverURI));
+
+        // Use Discovery to announce the uri of this server
+        Discovery discovery = Discovery.getInstance();
+        discovery.announce(SERVICE, serverURI);
+
         server.start().awaitTermination();
     }
 }
