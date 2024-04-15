@@ -37,7 +37,7 @@ public class RestShortsClient implements Shorts{
 	@Override
 	public Result<Short> createShort(String userId, String pwd) {
 		Response r = target.path(userId).queryParam(RestShorts.PWD, pwd)
-						.request().accept(MediaType.APPLICATION_JSON).post(null);
+						.request().post(Entity.json(null));
 
 		var status = r.getStatus();
 		if( status != Status.OK.getStatusCode() )
@@ -113,7 +113,7 @@ public class RestShortsClient implements Shorts{
 	@Override
 	public Result<Void> like(String shortId, String userId, boolean isLiked, String pwd) {
 		Response r = target.path(shortId).path(userId).queryParam(RestShorts.PWD, pwd).path(RestShorts.LIKES)
-						.request().post(null);
+						.request().post(Entity.json(null));
 		
 		var status = r.getStatus();
 		if( status != Status.OK.getStatusCode() )
