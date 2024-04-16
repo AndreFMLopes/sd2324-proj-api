@@ -62,13 +62,18 @@ public class JavaUsers implements Users{
 	@Override
 	public Result<User> updateUser(String userId, String pwd, User user) {
 		Log.info("updateUser : user = " + userId + "; pwd = " + pwd);
-
+		
 		// Check if user is valid
-		if(userId == null || pwd == null) {
-			Log.info("Name or Password null.");
+		if(userId == null || pwd == null || user == null) {
+			Log.info("Name, Password or user null.");
 			return Result.error( ErrorCode.BAD_REQUEST);
 		}
-				
+		
+		if(user.getUserId() != null) {
+			Log.info("Can't change userId.");
+			return Result.error( ErrorCode.BAD_REQUEST);
+		}
+		
 		var query = Hibernate.getInstance().jpql("SELECT u FROM User u WHERE u.userId = '" + userId + "'", User.class);
 		if(query.isEmpty()) {
 			Log.info("User does not exist.");
@@ -80,13 +85,6 @@ public class JavaUsers implements Users{
 			Log.info("Password is incorrect.");
 			return Result.error( ErrorCode.FORBIDDEN);
 		}
-
-		// Check if user is valid
-		if(user.getUserId() != null) {
-			Log.info("User ID cannot be modified.");
-			return Result.error( ErrorCode.BAD_REQUEST);
-		}
-
 		if(user.getDisplayName() != null)u.setDisplayName(user.getDisplayName());
 		if(user.getEmail() != null)u.setEmail(user.getEmail());
 		if(user.getPwd() != null)u.setPwd(user.getPwd());
@@ -131,8 +129,7 @@ public class JavaUsers implements Users{
 			return Result.error( ErrorCode.BAD_REQUEST);
 		}
 		
-		var query = Hibernate.getInstance().jpql("SELECT u FROM User u WHERE LOWER(u.userId) " +
-				"LIKE '%" + pattern.toLowerCase() + "%'", User.class);
+		var query = Hibernate.getInstance().jpql("SELECT u FROM User u WHERE UPPER(u.userId) LIKE UPPER('%" + pattern + "%')", User.class);
 		
 		return Result.ok(query);
 	}
