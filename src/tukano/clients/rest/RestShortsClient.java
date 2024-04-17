@@ -36,8 +36,10 @@ public class RestShortsClient implements Shorts{
 
 	@Override
 	public Result<Short> createShort(String userId, String pwd) {
-		Response r = target.path(userId).queryParam(RestShorts.PWD, pwd)
-						.request().post(Entity.json(null));
+		Response r = target.path(userId)
+				.queryParam(RestShorts.PWD, pwd)
+				.request()
+				.post(Entity.json(null));
 
 		var status = r.getStatus();
 		if( status != Status.OK.getStatusCode() )

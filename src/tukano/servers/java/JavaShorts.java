@@ -1,15 +1,16 @@
 package tukano.servers.java;
 
-import tukano.clients.Clients;
-
 import java.util.*;
 import java.util.logging.Logger;
 
+import jakarta.ws.rs.core.Response;
 import tukano.api.Follow;
 import tukano.api.Short;
 import tukano.api.User;
 import tukano.api.java.Result;
 import tukano.api.java.Shorts;
+import tukano.api.java.Users;
+import tukano.clients.ClientFactory;
 import tukano.persistence.Hibernate;
 import tukano.api.java.Result.ErrorCode;
 
@@ -23,42 +24,44 @@ public class JavaShorts implements Shorts {
 	public Result<Short> createShort(String userId, String pwd) {
 		Log.info("createShort : user = " + userId + "; pwd = " + pwd);
 
-		// Check if user data is valid
-		if(userId == null || pwd == null) {
-			Log.info("User Id or Password invalid.");
-			return Result.error( ErrorCode.BAD_REQUEST);
+		Result<Users> usersClient = ClientFactory.getUsersClient();
+
+		if (!usersClient.isOK()) {
+			Log.info("Server error");
+			return Result.error(ErrorCode.BAD_REQUEST);
 		}
 
-		for (User user : Clients.USERS_CLIENT.getClient().searchUsers("").value()) {
-			System.out.println(user);
-		}
+		Users usersServer = usersClient.value();
+		Result<User> owner = usersServer.getUser(userId, pwd);
 
-		User u = Clients.USERS_CLIENT.getClient().getUser(userId, pwd).value();
-
-		// Check if user exists
-		if(u == null) {
-			Log.info("User does not exist.");
-			return Result.error( ErrorCode.CONFLICT);
-		}
-
-		// Check user password
-		if (!u.getPwd().equals(pwd)) {
-			Log.info("Incorrect Password.");
-			return Result.error(ErrorCode.FORBIDDEN);
+		if (!owner.isOK()) {
+			switch (owner.error()) {
+				case NOT_FOUND -> {
+					Log.info("User does not exist.");
+					return Result.error( ErrorCode.NOT_FOUND);
+				}
+				case FORBIDDEN -> {
+					Log.info("Incorrect Password.");
+					return Result.error(ErrorCode.FORBIDDEN);
+				}
+				case BAD_REQUEST -> {
+					Log.info("An error occurred.");
+					return Result.error( ErrorCode.BAD_REQUEST);
+				}
+			}
 		}
 
 		String shortId = getNextShortId();
 		Short s = new Short(shortId, userId, "blob" + blobId);
 
 		Hibernate.getInstance().persist(s);
-		
 		return Result.ok(s);
 	}
 
 	@Override
 	public Result<Void> deleteShort(String shortId, String pwd) {
 		Log.info("deleteShort : shortId = " + shortId + "; pwd = " + pwd);
-		
+
 		var shortQuery = Hibernate.getInstance().jpql("SELECT s FROM Short s WHERE s.shortId = '" + shortId + "'", Short.class);
 
 		// Check if short exists
@@ -78,14 +81,14 @@ public class JavaShorts implements Shorts {
 		}
 
 		Hibernate.getInstance().delete(s);
-		
+
 		return Result.ok();
 	}
 
 	@Override
 	public Result<Short> getShort(String shortId) {
 		Log.info("getShort : shortId = " + shortId);
-		
+
 		var query = Hibernate.getInstance().jpql("SELECT s FROM Short s WHERE s.shortId = '" + shortId + "'", Short.class);
 
 		// Check if short exists
@@ -94,7 +97,7 @@ public class JavaShorts implements Shorts {
 			return Result.error( ErrorCode.NOT_FOUND);
 		}
 		Short s = query.get(0);
-		
+
 		return Result.ok(s);
 	}
 
@@ -109,7 +112,7 @@ public class JavaShorts implements Shorts {
 		}
 
 		var query = Hibernate.getInstance().jpql("SELECT s.shortId FROM Short s WHERE s.ownerId = '" + userId + "'", String.class);
-		
+
 		return Result.ok(query);
 	}
 
@@ -138,7 +141,7 @@ public class JavaShorts implements Shorts {
 		List<String> followers = f.getFollowers();
 		Follow f2 = query2.get(0);
 		List<String> follows = f2.getFollows();
-		
+
 		if(!followers.contains(userId1) && isFollowing) {
 			followers.add(userId1);
 			follows.add(userId2);
@@ -147,12 +150,12 @@ public class JavaShorts implements Shorts {
 			followers.remove(userId1);
 			follows.remove(userId2);
 		}
-		
+
 		f.setFollowers(followers);
 		f2.setFollows(follows);
 		Hibernate.getInstance().update(f);
 		Hibernate.getInstance().update(f2);
-		
+
 		return Result.ok();
 	}
 
@@ -175,7 +178,7 @@ public class JavaShorts implements Shorts {
 		}
 
 		var query = Hibernate.getInstance().jpql("SELECT f FROM Follow f WHERE f.followedUserId = '" + userId + "'", Follow.class);
-		
+
 		return Result.ok(query.get(0).getFollowers());
 	}
 
@@ -196,7 +199,7 @@ public class JavaShorts implements Shorts {
 			Log.info("Short does not exist.");
 			return Result.error( ErrorCode.NOT_FOUND);
 		}
-		
+
 		Short s = query.get(0);
 		List<String> likedBy = s.getLikedBy();
 
@@ -221,7 +224,7 @@ public class JavaShorts implements Shorts {
 			Log.info("Incorrect Password.");
 			return Result.error(ErrorCode.FORBIDDEN);
 		}
-		
+
 		if(isLiked) {
 			likedBy.add(userId);
 			s.setTotalLikes(s.getTotalLikes()+1);
@@ -255,7 +258,7 @@ public class JavaShorts implements Shorts {
 			Log.info("Incorrect Password.");
 			return Result.error(ErrorCode.FORBIDDEN);
 		}
-		
+
 		return Result.ok(query.get(0).getLikedBy());
 	}
 
@@ -275,22 +278,25 @@ public class JavaShorts implements Shorts {
 			Log.info("Incorrect Password.");
 			return Result.error(ErrorCode.FORBIDDEN);
 		}
-		
+
 		var query = Hibernate.getInstance().jpql("SELECT f FROM Follow f WHERE f.followedUserId = '" + userId + "'", Follow.class);
 		List<String> follows = query.get(0).getFollows();
-		
+
 		List<String> shorts = new ArrayList<String>();
 		for(String id : follows) {
 			var query2 = Hibernate.getInstance().jpql("SELECT s FROM Short s WHERE s.ownerId = '" + id + "'", Short.class);
 			shorts.add(query2.get(0).getShortId());
 		}
-		
+
 		return Result.ok(shorts);
 	}
 
 	private String getNextShortId(){
 		var query = Hibernate.getInstance().jpql("SELECT s.shortId FROM Short s ORDER BY s.shortId DESC", String.class);
-		return query.get(0);
+		if (query.isEmpty()) {
+			return "1";
+		}
+		return String.valueOf(Integer.parseInt(query.get(0)) + 1);
 	}
 
 }

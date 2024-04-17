@@ -30,7 +30,6 @@ public class JavaUsers implements Users{
 			return Result.error( ErrorCode.CONFLICT);
 		}
 		Hibernate.getInstance().persist(user);
-		
 		return Result.ok( user.userId() );
 	}
 
