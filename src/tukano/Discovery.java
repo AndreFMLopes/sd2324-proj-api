@@ -27,7 +27,7 @@ public interface Discovery {
 	 * @param minReplies - minimum number of requested URIs. Blocks until the number is satisfied.
 	 * @return array with the discovered URIs for the given service name.
 	 */
-	public URI[] knownUrisOf(String serviceName, int minReplies) throws InterruptedException;
+	public URI[] knownUrisOf(String serviceName);
 
 	/**
 	 * Get the instance of the Discovery service
@@ -99,16 +99,7 @@ class DiscoveryImpl implements Discovery {
 	static Map<String, URI[]> knownUris = new HashMap<>();
 
 	@Override
-	public URI[] knownUrisOf(String serviceName, int minEntries) throws InterruptedException {
-//		for (int i = 0; i < 5; i++) {
-//			result = knownUris.get(serviceName);
-//
-//			if (result != null && result.length >= minEntries) {
-//				return result;
-//			} else {
-//				Thread.sleep(DISCOVERY_RETRY_TIMEOUT);
-//			}
-//		}
+	public URI[] knownUrisOf(String serviceName){
 		return knownUris.get(serviceName);
 	}
 
