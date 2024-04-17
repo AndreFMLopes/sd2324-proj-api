@@ -24,7 +24,6 @@ public interface Discovery {
 	/**
 	 * Get discovered URIs for a given service name
 	 * @param serviceName - name of the service
-	 * @param minReplies - minimum number of requested URIs. Blocks until the number is satisfied.
 	 * @return array with the discovered URIs for the given service name.
 	 */
 	public URI[] knownUrisOf(String serviceName);
