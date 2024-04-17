@@ -17,7 +17,7 @@ public class RestShortsServer {
     }
 
     public static final int PORT = 8001;
-    public static final String SERVICE = "ShortsService";
+    public static final String SERVICE = "shorts";
     private static final String SERVER_URI_FMT = "http://%s:%s/rest";
 
     public static void main(String[] args) {
@@ -35,7 +35,6 @@ public class RestShortsServer {
             // Use Discovery to announce the uri of this server
             Discovery discovery = Discovery.getInstance();
             discovery.announce(SERVICE, serverURI);
-
         } catch (Exception e) {
             e.printStackTrace();
         }

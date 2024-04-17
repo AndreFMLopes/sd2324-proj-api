@@ -48,7 +48,7 @@ class DiscoveryImpl implements Discovery {
 	// The pre-aggreed multicast endpoint assigned to perform discovery.
 
 	static final int DISCOVERY_RETRY_TIMEOUT = 5000;
-	static final int DISCOVERY_ANNOUNCE_PERIOD = 10000;
+	static final int DISCOVERY_ANNOUNCE_PERIOD = 1000;
 
 	// Replace with appropriate values: allowed IP Multicast range: 224.0.0.1 - 239.255.255.255
 	static final InetSocketAddress DISCOVERY_ADDR = new InetSocketAddress("224.0.0.1", 12345);
@@ -100,17 +100,16 @@ class DiscoveryImpl implements Discovery {
 
 	@Override
 	public URI[] knownUrisOf(String serviceName, int minEntries) throws InterruptedException {
-		URI[] result = null;
-		for (int i = 0; i < 5; i++) {
-			result = knownUris.get(serviceName);
-
-			if (result != null && result.length >= minEntries) {
-				return result;
-			} else {
-				Thread.sleep(DISCOVERY_RETRY_TIMEOUT);
-			}
-		}
-		return result;
+//		for (int i = 0; i < 5; i++) {
+//			result = knownUris.get(serviceName);
+//
+//			if (result != null && result.length >= minEntries) {
+//				return result;
+//			} else {
+//				Thread.sleep(DISCOVERY_RETRY_TIMEOUT);
+//			}
+//		}
+		return knownUris.get(serviceName);
 	}
 
 	private void startListener() {
@@ -134,7 +133,7 @@ class DiscoveryImpl implements Discovery {
 
 							URI[] uris = knownUris.get(serviceName);
 							if (uris == null){
-								uris = new URI[1];
+								uris = new URI[10];
 							} else if (uris[uris.length - 1] != null) {
 								uris = resize(uris);
 							}
@@ -150,12 +149,6 @@ class DiscoveryImpl implements Discovery {
 							}
 						}
 
-//					    for (Map.Entry<String, URI[]> entry: knownUris.entrySet()) {
-//						    System.out.println(String.format("Known URIs for %s", entry.getKey()));
-//						    for (URI uri: entry.getValue()) {
-//							    System.out.println(uri.toString());
-//						    }
-//						}
 					} catch (Exception x) {
 						x.printStackTrace();
 					}
@@ -167,6 +160,6 @@ class DiscoveryImpl implements Discovery {
 	}
 
 	private URI[] resize(URI[] arr) {
-		return Arrays.copyOf(arr, arr.length + 1);
+		return Arrays.copyOf(arr, arr.length * 2);
 	}
 }
