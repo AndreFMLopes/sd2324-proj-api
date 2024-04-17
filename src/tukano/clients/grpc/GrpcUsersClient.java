@@ -1,4 +1,4 @@
-package tukano.impl.grpc.clients;
+package tukano.clients.grpc;
 
 import static tukano.api.java.Result.error;
 import static tukano.api.java.Result.ok;
