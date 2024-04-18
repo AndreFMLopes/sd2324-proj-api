@@ -39,6 +39,7 @@ public class RestShortsClient implements Shorts{
 		Response r = target.path(userId)
 				.queryParam(RestShorts.PWD, pwd)
 				.request()
+				.accept(MediaType.APPLICATION_JSON)
 				.post(Entity.json(null));
 
 		var status = r.getStatus();

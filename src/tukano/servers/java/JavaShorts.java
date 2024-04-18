@@ -20,6 +20,8 @@ public class JavaShorts implements Shorts {
 
 	private int blobId = 1; // ?
 
+	private static int shortId = 1;
+
 	@Override
 	public Result<Short> createShort(String userId, String pwd) {
 		Log.info("createShort : user = " + userId + "; pwd = " + pwd);
@@ -51,8 +53,7 @@ public class JavaShorts implements Shorts {
 			}
 		}
 
-		String shortId = getNextShortId();
-		Short s = new Short(shortId, userId, "blob" + blobId);
+		Short s = new Short(String.valueOf(shortId++), userId, "blob" + blobId);
 
 		Hibernate.getInstance().persist(s);
 		return Result.ok(s);
@@ -289,14 +290,6 @@ public class JavaShorts implements Shorts {
 		}
 
 		return Result.ok(shorts);
-	}
-
-	private String getNextShortId(){
-		var query = Hibernate.getInstance().jpql("SELECT s.shortId FROM Short s ORDER BY s.shortId DESC", String.class);
-		if (query.isEmpty()) {
-			return "1";
-		}
-		return String.valueOf(Integer.parseInt(query.get(0)) + 1);
 	}
 
 }

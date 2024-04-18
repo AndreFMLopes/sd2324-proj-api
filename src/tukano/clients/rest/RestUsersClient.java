@@ -53,7 +53,6 @@ public class RestUsersClient implements Users{
 	public Result<User> getUser(String userId, String pwd) {
 		Response r = target.path( userId )
 				.queryParam(RestUsers.PWD, pwd).request()
-				.accept(MediaType.APPLICATION_JSON)
 				.get();
 
 		var status = r.getStatus();
