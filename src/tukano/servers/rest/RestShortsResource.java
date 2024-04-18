@@ -43,7 +43,7 @@ public class RestShortsResource implements RestShorts{
 	
 	@Override
 	public void follow(String userId1, String userId2, boolean isFollowing, String pwd) {
-		Result<Void> result = impl.follow(userId1, userId1, isFollowing, pwd);
+		Result<Void> result = impl.follow(userId1, userId2, isFollowing, pwd);
 		if (result.isOK())
 			return;
 		else
