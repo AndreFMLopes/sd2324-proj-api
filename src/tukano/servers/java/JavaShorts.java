@@ -32,7 +32,6 @@ public class JavaShorts implements Shorts {
             return Result.error(owner.error());
         }
 
-        //String shortId = getNextShortId();
         Short s = new Short(String.valueOf(shortId++), userId, "blob" + blobId++);
 
         Hibernate.getInstance().persist(s);
@@ -264,8 +263,6 @@ public class JavaShorts implements Shorts {
             return Result.error(user.error());
         }
 
-
-        Log.info("Getting User " + userId + "'s shorts:");
         var userShorts = Hibernate.getInstance().jpql("SELECT s FROM Short s WHERE s.ownerId = '" + userId + "'", Short.class);
         List<Short> shorts = new ArrayList<Short>(userShorts);
 
@@ -273,27 +270,20 @@ public class JavaShorts implements Shorts {
 
         if (!followActivity.isEmpty()) {
             List<String> follows = followActivity.get(0).getFollows();
-
-            System.out.println(userId + " is following these users: " + follows.toString());
             // Getting followed users' shorts
             for (String id : follows) {
                 if (!id.equals(userId)) {
-                    Log.info("Getting " + id + "'s shorts");
                     var followedUserShorts = Hibernate.getInstance().jpql("SELECT s FROM Short s WHERE s.ownerId = '" + id + "'", Short.class);
                     shorts.addAll(followedUserShorts);
                 }
             }
         }
 
-        System.out.println("Unsorted : " + shorts);
         // Sort all shorts by timestamp
         shorts.sort(Comparator.comparingLong(Short::getTimestamp).reversed());
-        System.out.println("Sorted : " + shorts);
-        System.out.println(shorts);
 
         // Extract shortId only from shorts list
         List<String> shortIds = shorts.stream().map(Short::getShortId).collect(Collectors.toList());
-        System.out.println("Ids sorted: " + shortIds);
 
         return Result.ok(shortIds);
     }
