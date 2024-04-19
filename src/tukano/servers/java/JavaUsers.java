@@ -7,6 +7,8 @@ import java.util.logging.Logger;
 import tukano.api.User;
 import tukano.api.java.Result;
 import tukano.api.java.Result.ErrorCode;
+import tukano.api.java.Shorts;
+import tukano.clients.ClientFactory;
 import tukano.persistence.Hibernate;
 import tukano.api.java.Users;
 
@@ -113,6 +115,17 @@ public class JavaUsers implements Users{
 			Log.info("Password is incorrect.");
 			return Result.error( ErrorCode.FORBIDDEN);
 		}
+		
+		Result<Shorts> shortsClient = ClientFactory.getShortsClient();
+
+        if (!shortsClient.isOK()) {
+        	if(shortsClient.error() != ErrorCode.NOT_FOUND) {
+	            Log.info("Server error");
+	            return Result.error(ErrorCode.BAD_REQUEST);
+        	}
+        }
+        
+        if (shortsClient.isOK()) shortsClient.value().deleteAllAboutUser(userId, pwd);
 		
 		Hibernate.getInstance().delete(u);
 		

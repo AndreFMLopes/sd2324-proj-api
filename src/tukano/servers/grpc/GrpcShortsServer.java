@@ -9,7 +9,7 @@ import java.util.logging.Logger;
 
 public class GrpcShortsServer {
 
-    public static final String SERVICE = "ShortsService";
+    public static final String SERVICE = "shorts";
 
     public static final int PORT = 9001;
 

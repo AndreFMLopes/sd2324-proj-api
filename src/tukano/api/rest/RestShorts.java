@@ -28,6 +28,7 @@ public interface RestShorts {
 	String LIKES = "/likes";
 	String SHORTS = "/shorts";
 	String FOLLOWERS = "/followers";
+	String DELETE = "/delete";
 	
 	@POST
 	@Path("/{" + USER_ID + "}")
@@ -72,4 +73,8 @@ public interface RestShorts {
 	@Path("/{" + USER_ID + "}" + FEED )
 	@Produces(MediaType.APPLICATION_JSON)
 	List<String> getFeed( @PathParam(USER_ID) String userId, @QueryParam(PWD) String password);
+	
+	@DELETE
+	@Path("/{" + USER_ID + "}" + DELETE)
+	void deleteAllAboutUser(@PathParam(USER_ID) String userId, @QueryParam(PWD) String password);
 }

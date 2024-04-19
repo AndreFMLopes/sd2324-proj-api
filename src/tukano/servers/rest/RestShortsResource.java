@@ -73,6 +73,15 @@ public class RestShortsResource implements RestShorts{
 	public List<String> getFeed(String userId, String pwd) {
 		return resultOrThrow( impl.getFeed(userId, pwd));
 	}
+	
+	@Override
+	public void deleteAllAboutUser(String userId, String pwd) {
+		Result<Void> result = impl.deleteAllAboutUser(userId, pwd);
+		if (result.isOK())
+			return;
+		else
+			throw new WebApplicationException(statusCodeFrom(result));
+	}
 
 	/**
 	 * Given a Result<T>, either returns the value, or throws the JAX-WS Exception

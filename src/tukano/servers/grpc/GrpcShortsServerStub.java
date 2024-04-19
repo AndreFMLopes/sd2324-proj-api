@@ -11,6 +11,8 @@ import tukano.api.java.Shorts;
 import tukano.impl.grpc.generated_java.ShortsGrpc;
 import tukano.impl.grpc.generated_java.ShortsProtoBuf.CreateShortArgs;
 import tukano.impl.grpc.generated_java.ShortsProtoBuf.CreateShortResult;
+import tukano.impl.grpc.generated_java.ShortsProtoBuf.DeleteAllAboutUserArgs;
+import tukano.impl.grpc.generated_java.ShortsProtoBuf.DeleteAllAboutUserResult;
 import tukano.impl.grpc.generated_java.ShortsProtoBuf.GetShortArgs;
 import tukano.impl.grpc.generated_java.ShortsProtoBuf.GetShortResult;
 import tukano.impl.grpc.generated_java.ShortsProtoBuf.GetShortsArgs;
@@ -147,6 +149,17 @@ public class GrpcShortsServerStub implements ShortsGrpc.AsyncService, BindableSe
             for (int i = 0; i < shortIds.size(); i++) {
                 responseObserver.onNext(GetFeedResult.newBuilder().setShortId(i, shortIds.get(i)).build());
             }
+            responseObserver.onCompleted();
+        }
+    }
+
+    @Override
+    public void deleteAllAboutUser(DeleteAllAboutUserArgs request, StreamObserver<DeleteAllAboutUserResult> responseObserver) {
+        var res = impl.deleteAllAboutUser(request.getUserId(), request.getPassword());
+        if (!res.isOK()) {
+            responseObserver.onError(errorCodeToStatus(res.error()));
+        } else {
+            responseObserver.onNext(DeleteAllAboutUserResult.newBuilder().build());
             responseObserver.onCompleted();
         }
     }

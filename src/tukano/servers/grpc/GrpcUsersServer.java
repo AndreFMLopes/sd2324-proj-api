@@ -9,7 +9,7 @@ import java.util.logging.Logger;
 
 public class GrpcUsersServer {
 
-    public static final String SERVICE = "UsersService";
+    public static final String SERVICE = "users";
 
     public static final int PORT = 9000;
 
@@ -20,8 +20,11 @@ public class GrpcUsersServer {
     private static Logger Log = Logger.getLogger(GrpcUsersServer.class.getName());
 
     public static void main (String[] args) throws Exception {
+
         var stub = new GrpcUsersServerStub();
+
         var server = ServerBuilder.forPort(PORT).addService(stub).build();
+
         var serverURI = String.format(SERVER_BASE_URI, InetAddress.getLocalHost().getHostAddress(), PORT, GRPC_CTX);
 
         Log.info(String.format("%s gRPC Server Ready @ %s\n", Users.NAME, serverURI));
