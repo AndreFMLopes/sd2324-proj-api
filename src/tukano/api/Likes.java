@@ -3,8 +3,10 @@ package tukano.api;
 import java.util.ArrayList;
 import java.util.List;
 
+import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
+@Entity
 public class Likes {
 	
 	@Id
