@@ -24,7 +24,6 @@ public class Short {
 	String blobUrl;
 	long timestamp;
 	int totalLikes;
-	List<String> likedBy = new ArrayList<String>();
 
 	public Short() {}
 	
@@ -79,14 +78,6 @@ public class Short {
 
 	public void setTotalLikes(int totalLikes) {
 		this.totalLikes = totalLikes;
-	}
-	
-	public List<String> getLikedBy() {
-		return likedBy;
-	}
-
-	public void setLikedBy(List<String> likedBy) {
-		this.likedBy = likedBy;
 	}
 
 	@Override
