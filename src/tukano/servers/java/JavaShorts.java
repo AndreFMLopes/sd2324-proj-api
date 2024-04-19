@@ -2,6 +2,7 @@ package tukano.servers.java;
 
 import java.util.*;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import tukano.api.Follow;
 import tukano.api.Short;
@@ -16,305 +17,295 @@ import tukano.api.java.Result.ErrorCode;
 
 public class JavaShorts implements Shorts {
 
-	private static Logger Log = Logger.getLogger(JavaShorts.class.getName());
+    private static Logger Log = Logger.getLogger(JavaShorts.class.getName());
 
-	private int blobId = 1; // ?
-	private static int shortId = 1;
+    private int blobId = 1; // ?
+    private static int shortId = 1;
 
-	@Override
-	public Result<Short> createShort(String userId, String pwd) {
-		Log.info("createShort : user = " + userId + "; pwd = " + pwd);
-		
-		Result<User> owner = checkUser(userId, pwd);
+    @Override
+    public Result<Short> createShort(String userId, String pwd) {
+        Log.info("createShort : user = " + userId + "; pwd = " + pwd);
 
-		if (!owner.isOK()) {
-			return Result.error(owner.error());
-		}
+        Result<User> owner = checkUser(userId, pwd);
 
-		//String shortId = getNextShortId();
-		Short s = new Short(String.valueOf(shortId++), userId, "blob" + blobId++);
+        if (!owner.isOK()) {
+            return Result.error(owner.error());
+        }
 
-		Hibernate.getInstance().persist(s);
-		return Result.ok(s);
-	}
+        //String shortId = getNextShortId();
+        Short s = new Short(String.valueOf(shortId++), userId, "blob" + blobId++);
 
-	@Override
-	public Result<Void> deleteShort(String shortId, String pwd) {
-		Log.info("deleteShort : shortId = " + shortId + "; pwd = " + pwd);
+        Hibernate.getInstance().persist(s);
+        return Result.ok(s);
+    }
 
-		var shortQuery = Hibernate.getInstance().jpql("SELECT s FROM Short s WHERE s.shortId = '" + shortId + "'", Short.class);
+    @Override
+    public Result<Void> deleteShort(String shortId, String pwd) {
+        Log.info("deleteShort : shortId = " + shortId + "; pwd = " + pwd);
 
-		// Check if short exists
-		if(shortQuery.isEmpty()) {
-			Log.info("Short does not exist.");
-			return Result.error( ErrorCode.NOT_FOUND);
-		}
+        var shortQuery = Hibernate.getInstance().jpql("SELECT s FROM Short s WHERE s.shortId = '" + shortId + "'", Short.class);
 
-		Short s = shortQuery.get(0);
+        // Check if short exists
+        if (shortQuery.isEmpty()) {
+            Log.info("Short does not exist.");
+            return Result.error(ErrorCode.NOT_FOUND);
+        }
 
-		Result<User> owner = checkUser(s.getOwnerId(), pwd);
+        Short s = shortQuery.get(0);
 
-		if (!owner.isOK()) {
-			return Result.error(owner.error());
-		}
+        Result<User> owner = checkUser(s.getOwnerId(), pwd);
 
-		Hibernate.getInstance().delete(s);
+        if (!owner.isOK()) {
+            return Result.error(owner.error());
+        }
 
-		return Result.ok();
-	}
+        Hibernate.getInstance().delete(s);
 
-	@Override
-	public Result<Short> getShort(String shortId) {
-		Log.info("getShort : shortId = " + shortId);
+        return Result.ok();
+    }
 
-		var query = Hibernate.getInstance().jpql("SELECT s FROM Short s WHERE s.shortId = '" + shortId + "'", Short.class);
+    @Override
+    public Result<Short> getShort(String shortId) {
+        Log.info("getShort : shortId = " + shortId);
 
-		// Check if short exists
-		if(query.isEmpty()) {
-			Log.info("Short does not exist.");
-			return Result.error( ErrorCode.NOT_FOUND);
-		}
-		Short s = query.get(0);
+        var query = Hibernate.getInstance().jpql("SELECT s FROM Short s WHERE s.shortId = '" + shortId + "'", Short.class);
 
-		return Result.ok(s);
-	}
+        // Check if short exists
+        if (query.isEmpty()) {
+            Log.info("Short does not exist.");
+            return Result.error(ErrorCode.NOT_FOUND);
+        }
+        Short s = query.get(0);
 
-	@Override
-	public Result<List<String>> getShorts(String userId) {
-		
-		Result<User> owner = checkUser(userId, "1");
+        return Result.ok(s);
+    }
 
-		if (!owner.isOK()) {
-			if(!(owner.error() == ErrorCode.FORBIDDEN)) return Result.error(owner.error());
-		}
+    @Override
+    public Result<List<String>> getShorts(String userId) {
 
-		var query = Hibernate.getInstance().jpql("SELECT s.shortId FROM Short s WHERE s.ownerId = '" + userId + "'", String.class);
+        Result<User> owner = checkUser(userId, "1");
 
-		return Result.ok(query);
-	}
+        if (!owner.isOK()) {
+            if (!(owner.error() == ErrorCode.FORBIDDEN)) return Result.error(owner.error());
+        }
 
-	@Override
-	public Result<Void> follow(String userId1, String userId2, boolean isFollowing, String pwd) {
-		Log.info("follow : userId1 = " + userId1 + " ; userId2 = " + userId2 + " ; isFollowing = " + isFollowing + " ; pwd = " + pwd);
+        var query = Hibernate.getInstance().jpql("SELECT s.shortId FROM Short s WHERE s.ownerId = '" + userId + "'", String.class);
 
-		Result<User> user1 = checkUser(userId1, pwd);
+        return Result.ok(query);
+    }
 
-		if (!user1.isOK()) {
-			return Result.error(user1.error());
-		}
-		
-		Result<User> user2 = checkUser(userId2, "1");
+    @Override
+    public Result<Void> follow(String userId1, String userId2, boolean isFollowing, String pwd) {
+        Log.info("follow : userId1 = " + userId1 + " ; userId2 = " + userId2 + " ; isFollowing = " + isFollowing + " ; pwd = " + pwd);
 
-		if (!user2.isOK()) {
-			if(!(user2.error() == ErrorCode.FORBIDDEN)) return Result.error(user2.error());
-		}
+        Result<User> user1 = checkUser(userId1, pwd);
 
-		var query = Hibernate.getInstance().jpql("SELECT f FROM Follow f WHERE f.followedUserId = '" + userId2 + "'", Follow.class);
-		var query2 = Hibernate.getInstance().jpql("SELECT f FROM Follow f WHERE f.followedUserId = '" + userId1 + "'", Follow.class);
+        if (!user1.isOK()) {
+            return Result.error(user1.error());
+        }
 
-		Follow f;
-		Follow f2;
-		
-		if(query.size() == 0) {
-			f = new Follow(userId2);
-			f.getFollows().add(userId2);
-			Hibernate.getInstance().persist(f);
-		}
-		else f = query.get(0);
-		
-		if(query2.size() == 0) {
-			f2 = new Follow(userId1);
-			f.getFollows().add(userId1);
-			Hibernate.getInstance().persist(f2);
-		}
-		else f2 = query2.get(0);
-		
-		List<String> followers = f.getFollowers();
-		List<String> follows = f2.getFollows();
+        Result<User> user2 = checkUser(userId2, "1");
 
-		if(isFollowing) {
-			if(!followers.contains(userId1)) {
-				followers.add(userId1);
-				follows.add(userId2);
-			}
-			else {
-				Log.info("follow already exists.");
-				return Result.error( ErrorCode.CONFLICT);
-			}	
-		}
-		if(!isFollowing) {
-			if(followers.contains(userId1)) {
-				followers.remove(userId1);
-				follows.remove(userId2);
-			}
-			else {
-				Log.info("follow doesn't exists.");
-				return Result.error( ErrorCode.CONFLICT);
-			}
-		}
+        if (!user2.isOK()) {
+            if (!(user2.error() == ErrorCode.FORBIDDEN)) return Result.error(user2.error());
+        }
 
-		f.setFollowers(followers);
-		f2.setFollows(follows);
-		Hibernate.getInstance().update(f);
-		Hibernate.getInstance().update(f2);
+        var query = Hibernate.getInstance().jpql("SELECT f FROM Follow f WHERE f.followedUserId = '" + userId2 + "'", Follow.class);
+        var query2 = Hibernate.getInstance().jpql("SELECT f FROM Follow f WHERE f.followedUserId = '" + userId1 + "'", Follow.class);
 
-		return Result.ok();
-	}
+        Follow f;
+        Follow f2;
 
-	@Override
-	public Result<List<String>> followers(String userId, String pwd) {
-		Log.info("followers : userId = " + userId + " ; pwd = " + pwd);
+        if (query.isEmpty()) {
+            f = new Follow(userId2);
+            Hibernate.getInstance().persist(f);
+        } else f = query.get(0);
 
-		Result<User> user = checkUser(userId, pwd);
+        if (query2.isEmpty()) {
+            f2 = new Follow(userId1);
+            Hibernate.getInstance().persist(f2);
+        } else f2 = query2.get(0);
 
-		if (!user.isOK()) {
-			return Result.error(user.error());
-		}
+        List<String> followers = f.getFollowers();
+        List<String> follows = f2.getFollows();
 
-		var query = Hibernate.getInstance().jpql("SELECT f FROM Follow f WHERE f.followedUserId = '" + userId + "'", Follow.class);
-		if(query.size() == 0)return Result.ok(new ArrayList<String>());
-		return Result.ok(query.get(0).getFollowers());
-	}
+        if (isFollowing) {
+            if (!followers.contains(userId1)) {
+                followers.add(userId1);
+                follows.add(userId2);
+            } else {
+                Log.info("follow already exists.");
+                return Result.error(ErrorCode.CONFLICT);
+            }
+        } else {
+            if (followers.contains(userId1)) {
+                followers.remove(userId1);
+                follows.remove(userId2);
+            } else {
+                Log.info("follow doesn't exist.");
+                return Result.error(ErrorCode.CONFLICT);
+            }
+        }
 
-	@Override
-	public Result<Void> like(String shortId, String userId, boolean isLiked, String pwd) {
-		Log.info("like : shortId = " + shortId + " ; userId = " + userId + " ; isLiked = " + isLiked + " ; pwd = " + pwd);
+        f.setFollowers(followers);
+        f2.setFollows(follows);
+        Hibernate.getInstance().update(f);
+        Hibernate.getInstance().update(f2);
 
-		// Check if provided info is valid
-		if(shortId == null || userId == null) {
-			Log.info("ShortId null.");
-			return Result.error( ErrorCode.BAD_REQUEST);
-		}
+        return Result.ok();
+    }
 
-		var query = Hibernate.getInstance().jpql("SELECT s FROM Short s WHERE s.shortId = '" + shortId + "'", Short.class);
+    @Override
+    public Result<List<String>> followers(String userId, String pwd) {
+        Log.info("followers : userId = " + userId + " ; pwd = " + pwd);
 
-		// Check if short exists
-		if(query.isEmpty()) {
-			Log.info("Short does not exist.");
-			return Result.error( ErrorCode.NOT_FOUND);
-		}
-		
-		Result<User> user = checkUser(userId, pwd);
+        Result<User> user = checkUser(userId, pwd);
 
-		if (!user.isOK()) {
-			return Result.error(user.error());
-		}
-		
-		var query2 = Hibernate.getInstance().jpql("SELECT l FROM Likes l WHERE l.likedShortId = '" + shortId + "'", Likes.class);
+        if (!user.isOK()) {
+            return Result.error(user.error());
+        }
 
-		Short s = query.get(0);
-		
-		Likes l;
-		if(query2.size() == 0) {
-			l = new Likes(shortId);
-			Hibernate.getInstance().persist(l);
-		}
-		else l = query2.get(0);
-		List<String> likedBy = l.getLikedBy();
+        var query = Hibernate.getInstance().jpql("SELECT f FROM Follow f WHERE f.followedUserId = '" + userId + "'", Follow.class);
+        if (query.isEmpty()) return Result.ok(new ArrayList<String>());
+        return Result.ok(query.get(0).getFollowers());
+    }
 
-		// Check if like to be removed does not exist
-		if(!likedBy.contains(userId) && !isLiked) {
-			Log.info("The like being removed does not exist.");
-			return Result.error( ErrorCode.NOT_FOUND);
-		}
+    @Override
+    public Result<Void> like(String shortId, String userId, boolean isLiked, String pwd) {
+        Log.info("like : shortId = " + shortId + " ; userId = " + userId + " ; isLiked = " + isLiked + " ; pwd = " + pwd);
 
-		// Check if like exists
-		if(likedBy.contains(userId) && isLiked) {
-			Log.info("The like already exists.");
-			return Result.error( ErrorCode.CONFLICT);
-		}
+        // Check if provided info is valid
+        if (shortId == null || userId == null) {
+            Log.info("ShortId null.");
+            return Result.error(ErrorCode.BAD_REQUEST);
+        }
 
-		if(isLiked) {
-			likedBy.add(userId);
-			s.setTotalLikes(s.getTotalLikes()+1);
-		}
-		else {
-			likedBy.remove(userId);
-			s.setTotalLikes(s.getTotalLikes()-1);
-		}
-		l.setLikedBy(likedBy);
-		Hibernate.getInstance().update(s);
-		Hibernate.getInstance().update(l);
-		return Result.ok();
-	}
+        var query = Hibernate.getInstance().jpql("SELECT s FROM Short s WHERE s.shortId = '" + shortId + "'", Short.class);
 
-	@Override
-	public Result<List<String>> likes(String shortId, String pwd) {
-		Log.info("likes : shortId = " + shortId + " ; pwd = " + pwd);
+        // Check if short exists
+        if (query.isEmpty()) {
+            Log.info("Short does not exist.");
+            return Result.error(ErrorCode.NOT_FOUND);
+        }
 
-		// Check if short exists
-		var query = Hibernate.getInstance().jpql("SELECT s FROM Short s WHERE s.shortId = '" + shortId + "'", Short.class);
-		if(query.isEmpty()) {
-			Log.info("Short does not exist.");
-			return Result.error( ErrorCode.NOT_FOUND);
-		}
+        Result<User> user = checkUser(userId, pwd);
 
-		Short s = query.get(0);
+        if (!user.isOK()) {
+            return Result.error(user.error());
+        }
 
-		Result<User> user = checkUser(s.getOwnerId(), pwd);
+        var query2 = Hibernate.getInstance().jpql("SELECT l FROM Likes l WHERE l.likedShortId = '" + shortId + "'", Likes.class);
 
-		if (!user.isOK()) {
-			return Result.error(user.error());
-		}
+        Short s = query.get(0);
 
-		var query2 = Hibernate.getInstance().jpql("SELECT l FROM Likes l WHERE l.likedShortId = '" + shortId + "'", Likes.class);
-		if(query2.size() == 0)return Result.ok(new ArrayList<String>());
-		return Result.ok(query2.get(0).getLikedBy());
-	}
+        Likes l;
+        if (query2.isEmpty()) {
+            l = new Likes(shortId);
+            Hibernate.getInstance().persist(l);
+        } else l = query2.get(0);
+        List<String> likedBy = l.getLikedBy();
 
-	@Override
-	public Result<List<String>> getFeed(String userId, String pwd) {
-		Log.info("getFeed : userId = " + userId + " ; pwd = " + pwd);
+        // Check if like to be removed does not exist
+        if (!likedBy.contains(userId) && !isLiked) {
+            Log.info("The like being removed does not exist.");
+            return Result.error(ErrorCode.NOT_FOUND);
+        }
 
-		Result<User> user = checkUser(userId, pwd);
+        // Check if like exists
+        if (likedBy.contains(userId) && isLiked) {
+            Log.info("The like already exists.");
+            return Result.error(ErrorCode.CONFLICT);
+        }
 
-		if (!user.isOK()) {
-			return Result.error(user.error());
-		}
+        if (isLiked) {
+            likedBy.add(userId);
+            s.setTotalLikes(s.getTotalLikes() + 1);
+        } else {
+            likedBy.remove(userId);
+            s.setTotalLikes(s.getTotalLikes() - 1);
+        }
+        l.setLikedBy(likedBy);
+        Hibernate.getInstance().update(s);
+        Hibernate.getInstance().update(l);
+        return Result.ok();
+    }
 
-		var query = Hibernate.getInstance().jpql("SELECT f FROM Follow f WHERE f.followedUserId = '" + userId + "'", Follow.class);
-		Log.info("query size is : "+query.size());
-		if(query.size() == 0) {
-			var query2 = Hibernate.getInstance().jpql("SELECT s FROM Short s WHERE s.ownerId = '" + userId + "'", Short.class);
-			List<String> shorts = new ArrayList<String>();
-			for(Short s : query2) {
-				shorts.add(s.getShortId());
-			}
-			return Result.ok(shorts);
-		}
-		List<String> follows = query.get(0).getFollows();
+    @Override
+    public Result<List<String>> likes(String shortId, String pwd) {
+        Log.info("likes : shortId = " + shortId + " ; pwd = " + pwd);
 
-		List<String> shorts = new ArrayList<String>();
-		for(String id : follows) {
-			var query2 = Hibernate.getInstance().jpql("SELECT s FROM Short s WHERE s.ownerId = '" + id + "'", Short.class);
-			for(Short s : query2) {
-				shorts.add(s.getShortId());
-			}
-		}
+        // Check if short exists
+        var query = Hibernate.getInstance().jpql("SELECT s FROM Short s WHERE s.shortId = '" + shortId + "'", Short.class);
+        if (query.isEmpty()) {
+            Log.info("Short does not exist.");
+            return Result.error(ErrorCode.NOT_FOUND);
+        }
 
-		return Result.ok(shorts);
-	}
+        Short s = query.get(0);
 
-	private synchronized String getNextShortId(){
-		var query = Hibernate.getInstance().jpql("SELECT s.shortId FROM Short s ORDER BY s.shortId DESC", String.class);
-		if (query.isEmpty()) {
-			return "1";
-		}
-		return String.valueOf(Integer.parseInt(query.get(0)) + 1);
-	}
-	
-	private Result<User> checkUser(String userId, String pwd){
-		Result<Users> usersClient = ClientFactory.getUsersClient();
+        Result<User> user = checkUser(s.getOwnerId(), pwd);
 
-		if (!usersClient.isOK()) {
-			Log.info("Server error");
-			return Result.error(ErrorCode.BAD_REQUEST);
-		}
+        if (!user.isOK()) {
+            return Result.error(user.error());
+        }
 
-		Users usersServer = usersClient.value();
-		Result<User> user = usersServer.getUser(userId, pwd);
+        var query2 = Hibernate.getInstance().jpql("SELECT l FROM Likes l WHERE l.likedShortId = '" + shortId + "'", Likes.class);
+        if (query2.isEmpty()) return Result.ok(new ArrayList<String>());
+        return Result.ok(query2.get(0).getLikedBy());
+    }
 
-		return user;
-	}
+    @Override
+    public Result<List<String>> getFeed(String userId, String pwd) {
+        Log.info("getFeed : userId = " + userId + " ; pwd = " + pwd);
+
+        Result<User> user = checkUser(userId, pwd);
+
+        if (!user.isOK()) {
+            return Result.error(user.error());
+        }
+
+
+        Log.info("Getting User " + userId + "'s shorts:");
+        var userShorts = Hibernate.getInstance().jpql("SELECT s FROM Short s WHERE s.ownerId = '" + userId + "'", Short.class);
+        List<Short> shorts = new ArrayList<Short>(userShorts);
+
+        var followActivity = Hibernate.getInstance().jpql("SELECT f FROM Follow f WHERE f.followedUserId = '" + userId + "'", Follow.class);
+
+        if (!followActivity.isEmpty()) {
+            List<String> follows = followActivity.get(0).getFollows();
+
+            System.out.println(userId + " is following these users: " + follows.toString());
+            // Getting followed users' shorts
+            for (String id : follows) {
+                if (!id.equals(userId)) {
+                    Log.info("Getting " + id + "'s shorts");
+                    var followedUserShorts = Hibernate.getInstance().jpql("SELECT s FROM Short s WHERE s.ownerId = '" + id + "'", Short.class);
+                    shorts.addAll(followedUserShorts);
+                }
+            }
+        }
+
+        System.out.println("Unsorted : " + shorts);
+        // Sort all shorts by timestamp
+        shorts.sort(Comparator.comparingLong(Short::getTimestamp).reversed());
+        System.out.println("Sorted : " + shorts);
+        System.out.println(shorts);
+
+        // Extract shortId only from shorts list
+        List<String> shortIds = shorts.stream().map(Short::getShortId).collect(Collectors.toList());
+        System.out.println("Ids sorted: " + shortIds);
+
+        return Result.ok(shortIds);
+    }
+
+    private Result<User> checkUser(String userId, String pwd) {
+        Result<Users> usersClient = ClientFactory.getUsersClient();
+
+        if (!usersClient.isOK()) {
+            Log.info("Server error");
+            return Result.error(ErrorCode.BAD_REQUEST);
+        }
+        return usersClient.value().getUser(userId, pwd);
+    }
 
 }
