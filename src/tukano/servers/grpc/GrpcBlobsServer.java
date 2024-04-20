@@ -9,7 +9,7 @@ import java.util.logging.Logger;
 
 public class GrpcBlobsServer {
 
-    public static final String SERVICE = "BlobsService";
+    public static final String SERVICE = "blobs";
 
     public static final int PORT = 9002;
 

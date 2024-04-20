@@ -150,6 +150,18 @@ public class RestShortsClient implements Shorts{
 		else
 			return Result.ok( r.readEntity( List.class ));
 	}
+	
+	@Override
+	public Result<Void> deleteAllAboutUser(String userId, String pwd) {
+		Response r = target.path(userId).queryParam(RestShorts.PWD, pwd).path(RestShorts.DELETE)
+						.request().delete();
+		
+		var status = r.getStatus();
+		if( status != Status.OK.getStatusCode() )
+			return Result.error( getErrorCodeFrom(status));
+		else
+			return Result.ok();
+	}
 
 	public static ErrorCode getErrorCodeFrom(int status) {
 		return switch (status) {

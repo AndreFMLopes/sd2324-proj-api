@@ -8,12 +8,11 @@ import tukano.api.Short;
 public class DataModelAdaptor {
 
     public static User GrpcUser_to_User(GrpcUser from) {
-        return new User(
-                from.getUserId(),
-                from.getPassword(),
-                from.getEmail(),
-                from.getDisplayName()
-        );
+        return new User( 
+		emptyStringToNull(from.getUserId()), 
+		emptyStringToNull(from.getPassword()), 
+		emptyStringToNull(from.getEmail()), 
+		emptyStringToNull(from.getDisplayName()));
     }
 
     public static GrpcUser User_to_GrpcUser(User from) {
@@ -43,6 +42,10 @@ public class DataModelAdaptor {
                 .setTimestamp(from.getTimestamp())
                 .setTotalLikes(from.getTotalLikes())
                 .build();
+    }
+
+    private static String emptyStringToNull( String s ) {
+        return s == null || s.length() == 0 ? null: s;
     }
 
 }

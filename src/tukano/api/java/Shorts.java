@@ -125,4 +125,15 @@ public interface Shorts {
 	 *  FORBIDDEN if the password is incorrect
 	 */
 	Result<List<String>> getFeed(String userId, String password);
+	
+	
+	/**
+	 * Deletes everything about a user, including his shorts, his likes and his follows.
+	 * 
+	 * @param userId the identifier of the user which will have everything about him deleted.
+	 * @return (OK,void), 
+	 * 	NOT_FOUND if the user does not exists
+	 *  FORBIDDEN if the password is incorrect
+	 */
+	Result<Void> deleteAllAboutUser(String userId, String password);
 }

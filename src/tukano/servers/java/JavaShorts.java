@@ -78,6 +78,8 @@ public class JavaShorts implements Shorts {
             return Result.error(owner.error());
         }
 
+        var likes = Hibernate.getInstance().jpql("SELECT l FROM Likes l WHERE l.likedShortId = '" + s.getShortId() + "'", Likes.class);
+		if(!likes.isEmpty())Hibernate.getInstance().delete(likes.get(0));
         Hibernate.getInstance().delete(s);
 
         return Result.ok();
@@ -303,6 +305,47 @@ public class JavaShorts implements Shorts {
         List<String> shortIds = shorts.stream().map(Short::getShortId).collect(Collectors.toList());
 
         return Result.ok(shortIds);
+    }
+    
+    public Result<Void> deleteAllAboutUser(String userId, String pwd) {
+    	Log.info("deleteAboutByUser : userId = " + userId + " ; pwd = " + pwd);
+    	
+    	Result<User> user = checkUser(userId, pwd);
+
+        if (!user.isOK()) {
+            return Result.error(user.error());
+        }
+        
+    	var userShorts = Hibernate.getInstance().jpql("SELECT s FROM Short s WHERE s.ownerId = '" + userId + "'", Short.class);
+    	for(Short s : userShorts) {
+    		var likes = Hibernate.getInstance().jpql("SELECT l FROM Likes l WHERE l.likedShortId = '" + s.getShortId() + "'", Likes.class);
+    		if(!likes.isEmpty()) Hibernate.getInstance().delete(likes.get(0));
+    		Hibernate.getInstance().delete(s);
+    	}
+    	
+    	var likes = Hibernate.getInstance().jpql("SELECT l FROM Likes l", Likes.class);
+    	for(Likes l : likes) {
+    		List<String> likedBy = l.getLikedBy();
+    		if(likedBy.remove(userId)) Hibernate.getInstance().update(l);;
+    	}
+    	
+    	var follow = Hibernate.getInstance().jpql("SELECT f FROM Follow f WHERE f.followedUserId = '" + userId + "'", Follow.class);
+    	if(follow.isEmpty())return Result.ok();
+    	List<String> followers = follow.get(0).getFollowers();
+    	for(String follower : followers) {
+    		var f = Hibernate.getInstance().jpql("SELECT f FROM Follow f WHERE f.followedUserId = '" + follower + "'", Follow.class);
+    		List<String> follows = f.get(0).getFollows();
+    		if(follows.remove(userId)) Hibernate.getInstance().update(f.get(0));
+    	}
+    	
+    	List<String> follows = follow.get(0).getFollows();
+    	for(String followed : follows) {
+    		var f = Hibernate.getInstance().jpql("SELECT f FROM Follow f WHERE f.followedUserId = '" + followed + "'", Follow.class);
+    		List<String> followersTemp = f.get(0).getFollowers();
+    		if(followersTemp.remove(userId)) Hibernate.getInstance().update(f.get(0));
+    	}
+    	
+    	return Result.ok();
     }
 
     private Result<User> checkUser(String userId, String pwd) {

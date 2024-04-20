@@ -150,6 +150,14 @@ public class GrpcShortsClient implements Shorts{
 		}
 	}
 	
+	@Override
+	public Result<Void> deleteAllAboutUser(String userId, String password) {
+		return toJavaResult(() -> {
+			var res = stub.deleteAllAboutUser(DeleteAllAboutUserArgs.newBuilder().setUserId(userId).setPassword(password).build());
+			return null ;
+		});
+	}
+	
 	static ErrorCode statusToErrorCode( Status status ) {
     	return switch( status.getCode() ) {
     		case OK -> ErrorCode.OK;
