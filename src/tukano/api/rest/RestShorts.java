@@ -21,6 +21,7 @@ public interface RestShorts {
 	String USER_ID1 = "userId1";
 	String USER_ID2 = "userId2";
 	String SHORT_ID = "shortId";
+	String BLOB_ID_TO_CHECK = "blobIdToCheck";
 	
 	String PWD = "pwd";
 	String FEED = "/feed";
@@ -29,6 +30,7 @@ public interface RestShorts {
 	String SHORTS = "/shorts";
 	String FOLLOWERS = "/followers";
 	String DELETE = "/delete";
+	String CHECK = "/check";
 	
 	@POST
 	@Path("/{" + USER_ID + "}")
@@ -77,4 +79,8 @@ public interface RestShorts {
 	@DELETE
 	@Path("/{" + USER_ID + "}" + DELETE)
 	void deleteAllAboutUser(@PathParam(USER_ID) String userId, @QueryParam(PWD) String password);
+
+	@GET
+	@Path("/{" + BLOB_ID_TO_CHECK + "}" + CHECK)
+	void checkBlobId(@PathParam(BLOB_ID_TO_CHECK) String blobIdToCheck);
 }

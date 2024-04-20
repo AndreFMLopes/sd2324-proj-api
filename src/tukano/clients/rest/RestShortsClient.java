@@ -278,6 +278,28 @@ public class RestShortsClient implements Shorts {
         return Result.error(ErrorCode.TIMEOUT);
     }
 
+    @Override
+    public Result<Void> checkBlobId(String blobIdToCheck) {
+        for (int i = 0; i < MAX_RETRIES; i++) {
+            try {
+                Response r = target.path(blobIdToCheck).path(RestShorts.CHECK)
+                        .request().get();
+
+                var status = r.getStatus();
+                if (status != Status.NO_CONTENT.getStatusCode())
+                    return Result.error(getErrorCodeFrom(status));
+                else
+                    return Result.ok();
+            } catch (ProcessingException x) {
+                Log.info(x.getMessage());
+                tukano.utils.Sleep.ms(RETRY_SLEEP);
+            } catch (Exception x) {
+                x.printStackTrace();
+            }
+        }
+        return Result.error(ErrorCode.TIMEOUT);
+    }
+
     public static ErrorCode getErrorCodeFrom(int status) {
         return switch (status) {
             case 200, 209 -> ErrorCode.OK;

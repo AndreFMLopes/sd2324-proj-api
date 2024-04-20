@@ -62,7 +62,7 @@ public class JavaUsers implements Users{
 
 	@Override
 	public Result<User> updateUser(String userId, String pwd, User user) {
-		Log.info("updateUser : user = " + userId + "; pwd = " + pwd);
+		Log.info("updateUser : userId = " + userId + "; pwd = " + pwd + "; User : " + user);
 		
 		// Check if user is valid
 		if(userId == null || pwd == null || user == null) {
@@ -86,6 +86,7 @@ public class JavaUsers implements Users{
 			Log.info("Password is incorrect.");
 			return Result.error( ErrorCode.FORBIDDEN);
 		}
+
 		if(user.getDisplayName() != null)u.setDisplayName(user.getDisplayName());
 		if(user.getEmail() != null)u.setEmail(user.getEmail());
 		if(user.getPwd() != null)u.setPwd(user.getPwd());

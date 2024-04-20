@@ -404,6 +404,11 @@ public class JavaShorts implements Shorts {
         return Result.ok();
     }
 
+    public Result<Void> checkBlobId(String blobIdToCheck){
+        if(blobLocations.containsKey(Integer.parseInt(blobIdToCheck)))return Result.ok();
+        return Result.error(ErrorCode.FORBIDDEN);
+    }
+
     private Result<User> checkUser(String userId, String pwd) {
         Result<Users> usersClient = ClientFactory.getUsersClient();
         System.out.println(usersClient.error());

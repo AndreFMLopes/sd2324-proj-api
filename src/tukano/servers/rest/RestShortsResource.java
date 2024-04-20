@@ -83,6 +83,15 @@ public class RestShortsResource implements RestShorts{
 			throw new WebApplicationException(statusCodeFrom(result));
 	}
 
+	@Override
+	public void checkBlobId(String blobIdToCheck) {
+		Result<Void> result = impl.checkBlobId(blobIdToCheck);
+		if (result.isOK())
+			return;
+		else
+			throw new WebApplicationException(statusCodeFrom(result));
+	}
+
 	/**
 	 * Given a Result<T>, either returns the value, or throws the JAX-WS Exception
 	 * matching the error code...

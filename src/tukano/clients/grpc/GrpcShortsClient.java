@@ -157,6 +157,14 @@ public class GrpcShortsClient implements Shorts{
 			return null ;
 		});
 	}
+
+	@Override
+	public Result<Void> checkBlobId(String blobIdToCheck) {
+		return toJavaResult(() -> {
+			var res = stub.checkBlobId(CheckBlobIdArgs.newBuilder().setBlobIdToCheck(blobIdToCheck).build());
+			return null ;
+		});
+	}
 	
 	static ErrorCode statusToErrorCode( Status status ) {
     	return switch( status.getCode() ) {
