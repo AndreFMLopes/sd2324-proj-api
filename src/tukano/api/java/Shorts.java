@@ -136,4 +136,13 @@ public interface Shorts {
 	 *  FORBIDDEN if the password is incorrect
 	 */
 	Result<Void> deleteAllAboutUser(String userId, String password);
+
+	/**
+	 * Deletes everything about a user, including his shorts, his likes and his follows.
+	 * 
+	 * @param blobIdToCheck the identifier of the blob to verify.
+	 * @return (OK,void), 
+	 *  FORBIDDEN if the blogIdToCheck is invalid
+	 */
+	Result<Void> checkBlobId(String blobIdToCheck);
 }

@@ -12,6 +12,8 @@ import java.util.logging.Logger;
 import tukano.api.java.Blobs;
 import tukano.api.java.Result;
 import tukano.api.java.Result.ErrorCode;
+import tukano.api.java.Shorts;
+import tukano.clients.ClientFactory;
 
 public class JavaBlobs implements Blobs {
 
@@ -20,6 +22,9 @@ public class JavaBlobs implements Blobs {
     @Override
     public Result<Void> upload(String blobId, byte[] bytes) {
         Log.info("upload : blobId = " + blobId + "; bytes = " + bytes);
+
+        Result<Void> checkBlobIdResult = checkBlobId(blobId);
+        if(!checkBlobIdResult.isOK())return Result.error(checkBlobIdResult.error());
 
         File blob = new File("blob" + blobId);
         try {
@@ -47,7 +52,7 @@ public class JavaBlobs implements Blobs {
     @Override
     public Result<byte[]> download(String blobId) {
         Log.info("download : blobId = " + blobId);
-
+        
         File blob = new File("blob" + blobId);
         byte[] bytes = new byte[(int) blob.length()];
 
@@ -66,6 +71,7 @@ public class JavaBlobs implements Blobs {
     @Override
     public Result<Void> deleteBlob(String blobId) {
         Log.info("deleteBlob : blobId = " + blobId);
+
         File blob = new File("blob" + blobId);
         try {
             if (!Files.deleteIfExists(blob.toPath())) {
@@ -80,6 +86,20 @@ public class JavaBlobs implements Blobs {
         Log.info("File deleted successfully.");
 
         return Result.ok();
+    }
+
+    private Result<Void> checkBlobId(String blobId) {
+        Log.info("checking blobId : "+blobId);
+        Result<Shorts> shortsClient = ClientFactory.getShortsClient();
+
+        if (!shortsClient.isOK()) {
+            Log.info("Server error");
+            return Result.error(ErrorCode.BAD_REQUEST);
+        }
+
+        Result<Void> a = shortsClient.value().checkBlobId(blobId);
+
+        return a;
     }
 
 }
