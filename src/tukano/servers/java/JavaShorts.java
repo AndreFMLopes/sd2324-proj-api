@@ -11,6 +11,7 @@ import tukano.api.Follow;
 import tukano.api.Short;
 import tukano.api.User;
 import tukano.api.Likes;
+import tukano.api.java.Blobs;
 import tukano.api.java.Result;
 import tukano.api.java.Shorts;
 import tukano.api.java.Users;
@@ -59,7 +60,6 @@ public class JavaShorts implements Shorts {
             }
         } else { // If all servers already have blobs, find the one with less blobs
             String leastUsedServer = getLeastUsedServer();
-            System.out.println(leastUsedServer);
             blobLocations.put(blobId, leastUsedServer);
         }
 
@@ -94,6 +94,21 @@ public class JavaShorts implements Shorts {
 
         var likes = Hibernate.getInstance().jpql("SELECT l FROM Likes l WHERE l.likedShortId = '" + s.getShortId() + "'", Likes.class);
         if (!likes.isEmpty()) Hibernate.getInstance().delete(likes.get(0));
+
+        String[] urlTokens = s.getBlobUrl().split("/");
+        String shortBlobId = urlTokens[urlTokens.length - 1];
+
+        Result<Blobs> blobsClient = ClientFactory.getBlobsClient(blobLocations.get(Integer.parseInt(shortBlobId)));
+
+        if (!blobsClient.isOK()) {
+            if(blobsClient.error() != ErrorCode.NOT_FOUND) {
+                Log.info("Server error");
+                return Result.error(ErrorCode.BAD_REQUEST);
+            }
+        }
+
+        blobsClient.value().deleteBlob(shortBlobId);
+        blobLocations.remove(Integer.parseInt(shortBlobId));
         Hibernate.getInstance().delete(s);
 
         return Result.ok();
@@ -336,15 +351,39 @@ public class JavaShorts implements Shorts {
             if (!likes.isEmpty()) Hibernate.getInstance().delete(likes.get(0));
 
             String[] urlTokens = s.getBlobUrl().split("/");
-            ClientFactory.getBlobsClient(s.getBlobUrl()).value().deleteBlob(urlTokens[urlTokens.length - 1]);
+            String shortBlobId = urlTokens[urlTokens.length - 1];
+
+            Result<Blobs> blobsClient = ClientFactory.getBlobsClient(blobLocations.get(Integer.parseInt(shortBlobId)));
+
+            if (!blobsClient.isOK()) {
+                if(blobsClient.error() != ErrorCode.NOT_FOUND) {
+                    Log.info("Server error");
+                    return Result.error(ErrorCode.BAD_REQUEST);
+                }
+            }
+            blobsClient.value().deleteBlob(shortBlobId);
+            blobLocations.remove(Integer.parseInt(shortBlobId));
 
             Hibernate.getInstance().delete(s);
         }
 
         var likes = Hibernate.getInstance().jpql("SELECT l FROM Likes l", Likes.class);
         for (Likes l : likes) {
+            System.out.println(l.getLikedShortId() + " : " + l.getLikedBy());
             List<String> likedBy = l.getLikedBy();
-            if (likedBy.remove(userId)) Hibernate.getInstance().update(l);
+            if (l.getLikedShortId().equals("4")) {
+                System.out.println(likedBy);
+                System.out.println(userId);
+            }
+            if (likedBy.remove(userId)) {
+                l.setLikedBy(likedBy);
+                Hibernate.getInstance().update(l);
+
+                var shortToRemoveLikeQuery = Hibernate.getInstance().jpql("SELECT s FROM Short s WHERE s.shortId = '" + l.getLikedShortId() + "'", Short.class);
+                Short s = shortToRemoveLikeQuery.get(0);
+                s.setTotalLikes(s.getTotalLikes() - 1);
+                Hibernate.getInstance().update(s);
+            }
         }
 
         var follow = Hibernate.getInstance().jpql("SELECT f FROM Follow f WHERE f.followedUserId = '" + userId + "'", Follow.class);
@@ -375,6 +414,7 @@ public class JavaShorts implements Shorts {
         }
         return usersClient.value().getUser(userId, pwd);
     }
+
 
     public static String getLeastUsedServer() {
         List<String> usedServers = new ArrayList<String>(blobLocations.values());

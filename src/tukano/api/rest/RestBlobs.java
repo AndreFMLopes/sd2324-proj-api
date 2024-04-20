@@ -23,7 +23,7 @@ public interface RestBlobs {
  	byte[] download(@PathParam(BLOB_ID) String blobId);
 
 	@DELETE
-	@Path("/{" + BLOB_ID + "}" + DELETE)
+	@Path("/{" + BLOB_ID + "}")
 	void deleteBlob(@PathParam(BLOB_ID) String blobId);
 
 }

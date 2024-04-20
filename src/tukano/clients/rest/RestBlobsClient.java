@@ -61,7 +61,6 @@ public class RestBlobsClient implements Blobs{
 	@Override
 	public Result<Void> deleteBlob(String blobId) {
 		Response r = target.path(blobId)
-				.path(RestBlobs.DELETE)
 				.request()
 				.delete();
 
