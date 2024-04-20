@@ -18,7 +18,7 @@ public class JavaUsers implements Users{
 
 	@Override
 	public Result<String> createUser(User user) {
-		Log.info("createUser : " + user);
+		 Log.info("createUser : " + user);
 		
 		// Check if user data is valid
 		if(user.userId() == null || user.pwd() == null || user.displayName() == null || user.email() == null) {
