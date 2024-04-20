@@ -29,6 +29,15 @@ public class RestBlobsResource implements RestBlobs{
 		return resultOrThrow( impl.download(blobId));
 	}
 
+	@Override
+	public void deleteBlob(String blobId) {
+		Result<Void> result = impl.deleteBlob(blobId);
+		if (result.isOK())
+			return;
+		else
+			throw new WebApplicationException(statusCodeFrom(result));
+	}
+
 	/**
 	 * Given a Result<T>, either returns the value, or throws the JAX-WS Exception
 	 * matching the error code...

@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.logging.Logger;
 
@@ -60,6 +61,25 @@ public class JavaBlobs implements Blobs {
             return Result.error(ErrorCode.BAD_REQUEST);
         }
         return Result.ok(bytes);
+    }
+
+    @Override
+    public Result<Void> deleteBlob(String blobId) {
+        Log.info("deleteBlob : blobId = " + blobId);
+        File blob = new File("blob" + blobId);
+        try {
+            if (!Files.deleteIfExists(blob.toPath())) {
+                Log.info("File not found.");
+                return Result.error(ErrorCode.NOT_FOUND);
+            }
+        } catch (IOException e) {
+            Log.info("IO exception");
+            return Result.error(ErrorCode.BAD_REQUEST);
+        }
+
+        Log.info("File deleted successfully.");
+
+        return Result.ok();
     }
 
 }

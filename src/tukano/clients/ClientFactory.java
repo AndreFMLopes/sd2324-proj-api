@@ -44,4 +44,11 @@ public class ClientFactory {
         return Result.ok(new GrpcBlobsClient(blobsServers[0]));
     }
 
+    public static Result<Blobs> getBlobsClient(String serverUrl) {
+        URI serverURI = URI.create(serverUrl);
+        System.out.println(serverURI);
+        if (serverUrl.endsWith("rest")) return Result.ok(new RestBlobsClient(serverURI));
+        return Result.ok(new GrpcBlobsClient(serverURI));
+    }
+
 }

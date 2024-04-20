@@ -1,5 +1,6 @@
 package tukano.api.java;
 
+import java.io.IOException;
 import java.util.function.Consumer;
 
 /**
@@ -51,4 +52,12 @@ public interface Blobs {
 		sink.accept(res.value());
 		return Result.ok();
 	}
+
+	/**
+	 * Deletes the file related to the specified blobId
+	 * @param blobId the id of the blob
+	 * @return (OK, ), if the blob exists;
+	 * 		   NOT_FOUND, if no blob matches the provided blobId
+	 */
+	Result<Void> deleteBlob(String blobId);
 }

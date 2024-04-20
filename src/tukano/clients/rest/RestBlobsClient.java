@@ -1,5 +1,6 @@
 package tukano.clients.rest;
 
+import java.io.IOException;
 import java.net.URI;
 
 import org.glassfish.jersey.client.ClientConfig;
@@ -15,6 +16,7 @@ import tukano.api.java.Blobs;
 import tukano.api.java.Result;
 import tukano.api.java.Result.ErrorCode;
 import tukano.api.rest.RestBlobs;
+import tukano.api.rest.RestShorts;
 
 public class RestBlobsClient implements Blobs{
 	
@@ -55,7 +57,21 @@ public class RestBlobsClient implements Blobs{
 		else
 			return Result.ok( r.readEntity( byte[].class ));
 	}
-	
+
+	@Override
+	public Result<Void> deleteBlob(String blobId) {
+		Response r = target.path(blobId)
+				.path(RestBlobs.DELETE)
+				.request()
+				.delete();
+
+		var status = r.getStatus();
+		if( status != Status.OK.getStatusCode() )
+			return Result.error( getErrorCodeFrom(status));
+		else
+			return Result.ok();
+	}
+
 	public static ErrorCode getErrorCodeFrom(int status) {
 		return switch (status) {
 		case 200, 209 -> ErrorCode.OK;

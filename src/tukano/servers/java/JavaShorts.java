@@ -4,6 +4,7 @@ import java.net.URI;
 import java.util.*;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import java.util.function.Function;
 
 import tukano.Discovery;
 import tukano.api.Follow;
@@ -23,7 +24,8 @@ public class JavaShorts implements Shorts {
 
     private static int shortId = 1;
     private static int blobId = 1;
-    private Map<String, Integer> blobServers = new LinkedHashMap<>();
+    private static Map<Integer, String> blobLocations = new HashMap<>(); // Where all blobs are located
+    private Set<String> blobServers = new HashSet<>(); //All known blob server URLs
 
     @Override
     public Result<Short> createShort(String userId, String pwd) {
@@ -35,10 +37,11 @@ public class JavaShorts implements Shorts {
             return Result.error(owner.error());
         }
 
+        // Discover and add new blob servers
         URI[] blobUris = Discovery.getInstance().knownUrisOf("blobs");
         for (URI uri : blobUris) {
             if (uri != null) {
-                blobServers.putIfAbsent(uri.toString(), 0);
+                blobServers.add(uri.toString());
             }
         }
 
@@ -47,12 +50,23 @@ public class JavaShorts implements Shorts {
             return Result.error(ErrorCode.BAD_REQUEST);
         }
 
-        String blob = getLeastUsedServer(blobServers);
+        // If there are servers with no blobs
+        if (blobId <= blobServers.size()) {
+            for (String server : blobServers) {
+                if (!blobLocations.containsValue(server)) { // Check if server has blobs
+                    blobLocations.put(blobId, server);
+                }
+            }
+        } else { // If all servers already have blobs, find the one with less blobs
+            String leastUsedServer = getLeastUsedServer();
+            System.out.println(leastUsedServer);
+            blobLocations.put(blobId, leastUsedServer);
+        }
 
-        Short s = new Short(String.valueOf(shortId++), userId, blob + "/blobs/" + blobId++);
+        String blobUrl = blobLocations.get(blobId) + "/blobs/" + blobId;
+        blobId++;
 
-        int usages = blobServers.get(blob);
-        blobServers.put(blob, usages + 1);
+        Short s = new Short(String.valueOf(shortId++), userId, blobUrl);
 
         Hibernate.getInstance().persist(s);
         return Result.ok(s);
@@ -79,7 +93,7 @@ public class JavaShorts implements Shorts {
         }
 
         var likes = Hibernate.getInstance().jpql("SELECT l FROM Likes l WHERE l.likedShortId = '" + s.getShortId() + "'", Likes.class);
-		if(!likes.isEmpty())Hibernate.getInstance().delete(likes.get(0));
+        if (!likes.isEmpty()) Hibernate.getInstance().delete(likes.get(0));
         Hibernate.getInstance().delete(s);
 
         return Result.ok();
@@ -306,46 +320,50 @@ public class JavaShorts implements Shorts {
 
         return Result.ok(shortIds);
     }
-    
+
     public Result<Void> deleteAllAboutUser(String userId, String pwd) {
-    	Log.info("deleteAboutByUser : userId = " + userId + " ; pwd = " + pwd);
-    	
-    	Result<User> user = checkUser(userId, pwd);
+        Log.info("deleteAboutByUser : userId = " + userId + " ; pwd = " + pwd);
+
+        Result<User> user = checkUser(userId, pwd);
 
         if (!user.isOK()) {
             return Result.error(user.error());
         }
-        
-    	var userShorts = Hibernate.getInstance().jpql("SELECT s FROM Short s WHERE s.ownerId = '" + userId + "'", Short.class);
-    	for(Short s : userShorts) {
-    		var likes = Hibernate.getInstance().jpql("SELECT l FROM Likes l WHERE l.likedShortId = '" + s.getShortId() + "'", Likes.class);
-    		if(!likes.isEmpty()) Hibernate.getInstance().delete(likes.get(0));
-    		Hibernate.getInstance().delete(s);
-    	}
-    	
-    	var likes = Hibernate.getInstance().jpql("SELECT l FROM Likes l", Likes.class);
-    	for(Likes l : likes) {
-    		List<String> likedBy = l.getLikedBy();
-    		if(likedBy.remove(userId)) Hibernate.getInstance().update(l);;
-    	}
-    	
-    	var follow = Hibernate.getInstance().jpql("SELECT f FROM Follow f WHERE f.followedUserId = '" + userId + "'", Follow.class);
-    	if(follow.isEmpty())return Result.ok();
-    	List<String> followers = follow.get(0).getFollowers();
-    	for(String follower : followers) {
-    		var f = Hibernate.getInstance().jpql("SELECT f FROM Follow f WHERE f.followedUserId = '" + follower + "'", Follow.class);
-    		List<String> follows = f.get(0).getFollows();
-    		if(follows.remove(userId)) Hibernate.getInstance().update(f.get(0));
-    	}
-    	
-    	List<String> follows = follow.get(0).getFollows();
-    	for(String followed : follows) {
-    		var f = Hibernate.getInstance().jpql("SELECT f FROM Follow f WHERE f.followedUserId = '" + followed + "'", Follow.class);
-    		List<String> followersTemp = f.get(0).getFollowers();
-    		if(followersTemp.remove(userId)) Hibernate.getInstance().update(f.get(0));
-    	}
-    	
-    	return Result.ok();
+
+        var userShorts = Hibernate.getInstance().jpql("SELECT s FROM Short s WHERE s.ownerId = '" + userId + "'", Short.class);
+        for (Short s : userShorts) {
+            var likes = Hibernate.getInstance().jpql("SELECT l FROM Likes l WHERE l.likedShortId = '" + s.getShortId() + "'", Likes.class);
+            if (!likes.isEmpty()) Hibernate.getInstance().delete(likes.get(0));
+
+            String[] urlTokens = s.getBlobUrl().split("/");
+            ClientFactory.getBlobsClient(s.getBlobUrl()).value().deleteBlob(urlTokens[urlTokens.length - 1]);
+
+            Hibernate.getInstance().delete(s);
+        }
+
+        var likes = Hibernate.getInstance().jpql("SELECT l FROM Likes l", Likes.class);
+        for (Likes l : likes) {
+            List<String> likedBy = l.getLikedBy();
+            if (likedBy.remove(userId)) Hibernate.getInstance().update(l);
+        }
+
+        var follow = Hibernate.getInstance().jpql("SELECT f FROM Follow f WHERE f.followedUserId = '" + userId + "'", Follow.class);
+        if (follow.isEmpty()) return Result.ok();
+        List<String> followers = follow.get(0).getFollowers();
+        for (String follower : followers) {
+            var f = Hibernate.getInstance().jpql("SELECT f FROM Follow f WHERE f.followedUserId = '" + follower + "'", Follow.class);
+            List<String> follows = f.get(0).getFollows();
+            if (follows.remove(userId)) Hibernate.getInstance().update(f.get(0));
+        }
+
+        List<String> follows = follow.get(0).getFollows();
+        for (String followed : follows) {
+            var f = Hibernate.getInstance().jpql("SELECT f FROM Follow f WHERE f.followedUserId = '" + followed + "'", Follow.class);
+            List<String> followersTemp = f.get(0).getFollowers();
+            if (followersTemp.remove(userId)) Hibernate.getInstance().update(f.get(0));
+        }
+
+        return Result.ok();
     }
 
     private Result<User> checkUser(String userId, String pwd) {
@@ -358,16 +376,20 @@ public class JavaShorts implements Shorts {
         return usersClient.value().getUser(userId, pwd);
     }
 
-    private String getLeastUsedServer(Map<String, Integer> map) {
-        List<Map.Entry<String, Integer>> list = new ArrayList<>(map.entrySet());
-        list.sort(Map.Entry.comparingByValue());
+    public static String getLeastUsedServer() {
+        List<String> usedServers = new ArrayList<String>(blobLocations.values());
 
-        Map<String, Integer> result = new LinkedHashMap<>();
-        for (Map.Entry<String, Integer> entry : list) {
-            result.put(entry.getKey(), entry.getValue());
+        int min = Integer.MAX_VALUE;
+        String server = "";
+
+        for (String sv : usedServers) {
+            int count = Collections.frequency(usedServers, sv);
+            if (count < min) {
+                min = count;
+                server = sv;
+            }
         }
-
-        return result.entrySet().iterator().next().getKey();
+        return server;
     }
 
 }

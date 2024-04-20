@@ -3,6 +3,7 @@ package tukano.clients.grpc;
 import static tukano.api.java.Result.error;
 import static tukano.api.java.Result.ok;
 
+import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
@@ -20,6 +21,7 @@ import tukano.api.java.Result;
 import tukano.api.java.Result.ErrorCode;
 import tukano.impl.grpc.generated_java.BlobsGrpc;
 import tukano.impl.grpc.generated_java.BlobsProtoBuf.*;
+import tukano.impl.grpc.generated_java.ShortsProtoBuf;
 
 public class GrpcBlobsClient implements Blobs{
 	
@@ -54,8 +56,16 @@ public class GrpcBlobsClient implements Blobs{
 			bs.copyTo(bytes, 0);
 			return bytes;
 		});
-	}	
-	
+	}
+
+	@Override
+	public Result<Void> deleteBlob(String blobId) {
+		return toJavaResult(() -> {
+			var res = stub.deleteBlob(DeleteBlobArgs.newBuilder().setBlobId(blobId).build());
+			return null ;
+		});
+	}
+
 	static <T> Result<T> toJavaResult(Supplier<T> func) {
 		try {
 			return ok(func.get());
