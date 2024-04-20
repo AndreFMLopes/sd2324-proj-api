@@ -8,6 +8,8 @@ import io.grpc.stub.StreamObserver;
 import tukano.api.java.Blobs;
 import tukano.api.java.Result;
 import tukano.impl.grpc.generated_java.BlobsGrpc;
+import tukano.impl.grpc.generated_java.BlobsProtoBuf.DeleteBlobArgs;
+import tukano.impl.grpc.generated_java.BlobsProtoBuf.DeleteBlobResult;
 import tukano.impl.grpc.generated_java.BlobsProtoBuf.UploadArgs;
 import tukano.impl.grpc.generated_java.BlobsProtoBuf.UploadResult;
 import tukano.impl.grpc.generated_java.BlobsProtoBuf.DownloadArgs;
@@ -42,6 +44,17 @@ public class GrpcBlobsServerStub implements BlobsGrpc.AsyncService, BindableServ
             responseObserver.onError(errorCodeToStatus(res.error()));
         } else {
             responseObserver.onNext(DownloadResult.newBuilder().setChunk(ByteString.copyFrom(res.value())).build());
+            responseObserver.onCompleted();
+        }
+    }
+
+    @Override
+    public void deleteBlob(DeleteBlobArgs request, StreamObserver<DeleteBlobResult> responseObserver) {
+        var res = impl.deleteBlob(request.getBlobId());
+        if (!res.isOK()) {
+            responseObserver.onError(errorCodeToStatus(res.error()));
+        } else {
+            responseObserver.onNext(DeleteBlobResult.newBuilder().build());
             responseObserver.onCompleted();
         }
     }

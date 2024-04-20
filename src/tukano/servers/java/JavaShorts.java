@@ -4,7 +4,6 @@ import java.net.URI;
 import java.util.*;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
-import java.util.function.Function;
 
 import tukano.Discovery;
 import tukano.api.Follow;
@@ -34,9 +33,12 @@ public class JavaShorts implements Shorts {
 
         Result<User> owner = checkUser(userId, pwd);
 
+        System.out.println("getting user success");
+
         if (!owner.isOK()) {
             return Result.error(owner.error());
         }
+
 
         // Discover and add new blob servers
         URI[] blobUris = Discovery.getInstance().knownUrisOf("blobs");
@@ -407,7 +409,6 @@ public class JavaShorts implements Shorts {
 
     private Result<User> checkUser(String userId, String pwd) {
         Result<Users> usersClient = ClientFactory.getUsersClient();
-
         if (!usersClient.isOK()) {
             Log.info("Server error");
             return Result.error(ErrorCode.BAD_REQUEST);

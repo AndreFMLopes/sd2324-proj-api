@@ -2,7 +2,9 @@ package tukano.clients.rest;
 
 import java.net.URI;
 import java.util.List;
+import java.util.logging.Logger;
 
+import jakarta.ws.rs.ProcessingException;
 import jakarta.ws.rs.core.GenericType;
 import org.glassfish.jersey.client.ClientConfig;
 
@@ -13,13 +15,24 @@ import jakarta.ws.rs.client.WebTarget;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.Response.Status;
+import org.glassfish.jersey.client.ClientProperties;
+import tukano.api.Short;
 import tukano.api.User;
 import tukano.api.java.Result;
 import tukano.api.java.Users;
 import tukano.api.java.Result.ErrorCode;
+import tukano.api.rest.RestShorts;
 import tukano.api.rest.RestUsers;
 
 public class RestUsersClient implements Users{
+
+	private static Logger Log = Logger.getLogger(RestUsersClient.class.getName());
+
+	protected static final int READ_TIMEOUT = 5000;
+	protected static final int CONNECT_TIMEOUT = 5000;
+
+	protected static final int MAX_RETRIES = 10;
+	protected static final int RETRY_SLEEP = 5000;
 
 	final URI serverURI;
 	final Client client;
@@ -31,6 +44,9 @@ public class RestUsersClient implements Users{
 		this.serverURI = serverURI;
 		this.config = new ClientConfig();
 
+		config.property( ClientProperties.READ_TIMEOUT, READ_TIMEOUT);
+		config.property( ClientProperties.CONNECT_TIMEOUT, CONNECT_TIMEOUT);
+
 		this.client = ClientBuilder.newClient(config);
 
 		target = client.target( serverURI ).path( RestUsers.PATH );
@@ -38,15 +54,27 @@ public class RestUsersClient implements Users{
 		
 	@Override
 	public Result<String> createUser(User user) {
-		Response r = target.request()
-				.accept(MediaType.APPLICATION_JSON)
-				.post(Entity.entity(user, MediaType.APPLICATION_JSON));
+		for (int i = 0; i < MAX_RETRIES; i++) {
+			try {
+				Response r = target.request()
+						.accept(MediaType.APPLICATION_JSON)
+						.post(Entity.entity(user, MediaType.APPLICATION_JSON));
 
-		var status = r.getStatus();
-		if( status != Status.OK.getStatusCode() )
-			return Result.error( getErrorCodeFrom(status));
-		else
-			return Result.ok( r.readEntity( String.class ));
+				var status = r.getStatus();
+				if( status != Status.OK.getStatusCode() )
+					return Result.error( getErrorCodeFrom(status));
+				else
+					return Result.ok( r.readEntity( String.class ));
+			} catch (ProcessingException x) {
+				Log.info(x.getMessage());
+
+				tukano.utils.Sleep.ms(RETRY_SLEEP);
+			} catch (Exception x) {
+				x.printStackTrace();
+			}
+		}
+		return Result.error(ErrorCode.TIMEOUT);
+
 	}
 
 	@Override
