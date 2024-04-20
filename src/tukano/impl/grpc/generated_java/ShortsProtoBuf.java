@@ -14993,7 +14993,7 @@ public final class ShortsProtoBuf {
       "outUserArgs\022\016\n\006userId\030\001 \001(\t\022\020\n\010password\030" +
       "\002 \001(\t\"\032\n\030DeleteAllAboutUserResult\"(\n\017Che" +
       "ckBlobIdArgs\022\025\n\rblobIdToCheck\030\001 \001(\t\"\023\n\021C" +
-      "heckBlobIdResult2\330\003\n\006Shorts\0223\n\013createSho" +
+      "heckBlobIdResult2\215\004\n\006Shorts\0223\n\013createSho" +
       "rt\022\020.CreateShortArgs\032\022.CreateShortResult" +
       "\0223\n\013deleteShort\022\020.DeleteShortArgs\032\022.Dele" +
       "teShortResult\022*\n\010getShort\022\r.GetShortArgs" +
@@ -15005,8 +15005,10 @@ public final class ShortsProtoBuf {
       "gs\032\014.LikesResult\022\'\n\007getFeed\022\014.GetFeedArg" +
       "s\032\016.GetFeedResult\022H\n\022deleteAllAboutUser\022" +
       "\027.DeleteAllAboutUserArgs\032\031.DeleteAllAbou" +
-      "tUserResultB1\n\037tukano.impl.grpc.generate" +
-      "d_javaB\016ShortsProtoBufb\006proto3"
+      "tUserResult\0223\n\013checkBlobId\022\020.CheckBlobId" +
+      "Args\032\022.CheckBlobIdResultB1\n\037tukano.impl." +
+      "grpc.generated_javaB\016ShortsProtoBufb\006pro" +
+      "to3"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,

@@ -25,6 +25,8 @@ service Shorts {
 	rpc getFeed( GetFeedArgs) returns (GetFeedResult);
 
 	rpc deleteAllAboutUser(DeleteAllAboutUserArgs) returns (DeleteAllAboutUserResult);
+
+	rpc checkBlobId( CheckBlobIdArgs ) returns (CheckBlobIdResult);
 }
 
 message GrpcShort {
