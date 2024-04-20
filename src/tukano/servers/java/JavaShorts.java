@@ -1,9 +1,11 @@
 package tukano.servers.java;
 
+import java.net.URI;
 import java.util.*;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import tukano.Discovery;
 import tukano.api.Follow;
 import tukano.api.Short;
 import tukano.api.User;
@@ -19,8 +21,9 @@ public class JavaShorts implements Shorts {
 
     private static Logger Log = Logger.getLogger(JavaShorts.class.getName());
 
-    private int blobId = 1; // ?
     private static int shortId = 1;
+    private static int blobId = 1;
+    private Map<String, Integer> blobServers = new LinkedHashMap<>();
 
     @Override
     public Result<Short> createShort(String userId, String pwd) {
@@ -32,7 +35,24 @@ public class JavaShorts implements Shorts {
             return Result.error(owner.error());
         }
 
-        Short s = new Short(String.valueOf(shortId++), userId, "blob" + blobId++);
+        URI[] blobUris = Discovery.getInstance().knownUrisOf("blobs");
+        for (URI uri : blobUris) {
+            if (uri != null) {
+                blobServers.putIfAbsent(uri.toString(), 0);
+            }
+        }
+
+        if (blobServers.isEmpty()) {
+            Log.info("Blob servers not online.");
+            return Result.error(ErrorCode.BAD_REQUEST);
+        }
+
+        String blob = getLeastUsedServer(blobServers);
+
+        Short s = new Short(String.valueOf(shortId++), userId, blob + "/blobs/" + blobId++);
+
+        int usages = blobServers.get(blob);
+        blobServers.put(blob, usages + 1);
 
         Hibernate.getInstance().persist(s);
         return Result.ok(s);
@@ -140,9 +160,6 @@ public class JavaShorts implements Shorts {
             if (followers.contains(userId1)) {
                 followers.remove(userId1);
                 follows.remove(userId2);
-            } else {
-                Log.info("follow doesn't exist.");
-                return Result.error(ErrorCode.CONFLICT);
             }
         }
 
@@ -296,6 +313,18 @@ public class JavaShorts implements Shorts {
             return Result.error(ErrorCode.BAD_REQUEST);
         }
         return usersClient.value().getUser(userId, pwd);
+    }
+
+    private String getLeastUsedServer(Map<String, Integer> map) {
+        List<Map.Entry<String, Integer>> list = new ArrayList<>(map.entrySet());
+        list.sort(Map.Entry.comparingByValue());
+
+        Map<String, Integer> result = new LinkedHashMap<>();
+        for (Map.Entry<String, Integer> entry : list) {
+            result.put(entry.getKey(), entry.getValue());
+        }
+
+        return result.entrySet().iterator().next().getKey();
     }
 
 }
