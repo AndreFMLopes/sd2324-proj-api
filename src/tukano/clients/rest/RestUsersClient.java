@@ -31,7 +31,7 @@ public class RestUsersClient implements Users{
 	protected static final int READ_TIMEOUT = 5000;
 	protected static final int CONNECT_TIMEOUT = 5000;
 
-	protected static final int MAX_RETRIES = 10;
+	protected static final int MAX_RETRIES = 4;
 	protected static final int RETRY_SLEEP = 5000;
 
 	final URI serverURI;
@@ -67,7 +67,6 @@ public class RestUsersClient implements Users{
 					return Result.ok( r.readEntity( String.class ));
 			} catch (ProcessingException x) {
 				Log.info(x.getMessage());
-
 				tukano.utils.Sleep.ms(RETRY_SLEEP);
 			} catch (Exception x) {
 				x.printStackTrace();
@@ -92,12 +91,13 @@ public class RestUsersClient implements Users{
 					return Result.ok( r.readEntity( User.class ));
 			} catch (ProcessingException x) {
 				Log.info(x.getMessage());
-
+				Log.info("Sleeping for 5 seconds...");
 				tukano.utils.Sleep.ms(RETRY_SLEEP);
 			} catch (Exception x) {
 				x.printStackTrace();
 			}
 		}
+		Log.info("Returning Timeout");
 		return Result.error(ErrorCode.TIMEOUT);
 	}
 	

@@ -70,7 +70,7 @@ public class JavaUsers implements Users{
 			return Result.error( ErrorCode.BAD_REQUEST);
 		}
 		
-		if(user.getUserId() != null) {
+		if(user.getUserId() != null && !userId.equals(user.getUserId())) {
 			Log.info("Can't change userId.");
 			return Result.error( ErrorCode.BAD_REQUEST);
 		}

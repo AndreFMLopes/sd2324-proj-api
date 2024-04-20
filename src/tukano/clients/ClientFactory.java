@@ -46,7 +46,6 @@ public class ClientFactory {
 
     public static Result<Blobs> getBlobsClient(String serverUrl) {
         URI serverURI = URI.create(serverUrl);
-        System.out.println(serverURI);
         if (serverUrl.contains("rest")) return Result.ok(new RestBlobsClient(serverURI));
         return Result.ok(new GrpcBlobsClient(serverURI));
     }
