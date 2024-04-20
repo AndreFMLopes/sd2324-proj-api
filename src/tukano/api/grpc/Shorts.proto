@@ -122,3 +122,10 @@ message DeleteAllAboutUserArgs {
 
 message DeleteAllAboutUserResult {
 }
+
+message CheckBlobIdArgs {
+    string blobIdToCheck = 1;
+}
+
+message CheckBlobIdResult {
+}
