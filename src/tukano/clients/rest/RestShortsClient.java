@@ -51,7 +51,6 @@ public class RestShortsClient implements Shorts {
 
     @Override
     public Result<Short> createShort(String userId, String pwd) {
-
         for (int i = 0; i < MAX_RETRIES; i++) {
             try {
                 Response r = target.path(userId)
@@ -78,116 +77,205 @@ public class RestShortsClient implements Shorts {
 
     @Override
     public Result<Void> deleteShort(String shortId, String pwd) {
-        Response r = target.path(shortId).queryParam(RestShorts.PWD, pwd)
-                .request().delete();
+        for (int i = 0; i < MAX_RETRIES; i++) {
+            try {
+                Response r = target.path(shortId).queryParam(RestShorts.PWD, pwd)
+                        .request().delete();
 
-        var status = r.getStatus();
-        if (status != Status.OK.getStatusCode())
-            return Result.error(getErrorCodeFrom(status));
-        else
-            return Result.ok();
+                var status = r.getStatus();
+                if (status != Status.OK.getStatusCode())
+                    return Result.error(getErrorCodeFrom(status));
+                else
+                    return Result.ok();
+            } catch (ProcessingException x) {
+                Log.info(x.getMessage());
+                tukano.utils.Sleep.ms(RETRY_SLEEP);
+            } catch (Exception x) {
+                x.printStackTrace();
+            }
+        }
+        return Result.error(ErrorCode.TIMEOUT);
     }
 
     @Override
     public Result<Short> getShort(String shortId) {
-        Response r = target.path(shortId).request()
-                .accept(MediaType.APPLICATION_JSON)
-                .get();
+        for (int i = 0; i < MAX_RETRIES; i++) {
+            try {
+                Response r = target.path(shortId).request()
+                        .accept(MediaType.APPLICATION_JSON)
+                        .get();
 
-        var status = r.getStatus();
-        if (status != Status.OK.getStatusCode())
-            return Result.error(getErrorCodeFrom(status));
-        else
-            return Result.ok(r.readEntity(Short.class));
+                var status = r.getStatus();
+                if (status != Status.OK.getStatusCode())
+                    return Result.error(getErrorCodeFrom(status));
+                else
+                    return Result.ok(r.readEntity(Short.class));
+            } catch (ProcessingException x) {
+                Log.info(x.getMessage());
+                tukano.utils.Sleep.ms(RETRY_SLEEP);
+            } catch (Exception x) {
+                x.printStackTrace();
+            }
+        }
+        return Result.error(ErrorCode.TIMEOUT);
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public Result<List<String>> getShorts(String userId) {
-        Response r = target.path(userId + RestShorts.SHORTS).request()
-                .accept(MediaType.APPLICATION_JSON)
-                .get();
+        for (int i = 0; i < MAX_RETRIES; i++) {
+            try {
+                Response r = target.path(userId + RestShorts.SHORTS).request()
+                        .accept(MediaType.APPLICATION_JSON)
+                        .get();
 
-        var status = r.getStatus();
-        if (status != Status.OK.getStatusCode())
-            return Result.error(getErrorCodeFrom(status));
-        else
-            return Result.ok(r.readEntity(List.class));
+                var status = r.getStatus();
+                if (status != Status.OK.getStatusCode())
+                    return Result.error(getErrorCodeFrom(status));
+                else
+                    return Result.ok(r.readEntity(List.class));
+            } catch (ProcessingException x) {
+                Log.info(x.getMessage());
+                tukano.utils.Sleep.ms(RETRY_SLEEP);
+            } catch (Exception x) {
+                x.printStackTrace();
+            }
+        }
+        return Result.error(ErrorCode.TIMEOUT);
     }
 
     @Override
     public Result<Void> follow(String userId1, String userId2, boolean isFollowing, String pwd) {
-        Response r = target.path(userId1).queryParam(RestShorts.PWD, pwd).path(userId2 + RestShorts.FOLLOWERS)
-                .request().post(Entity.entity(isFollowing, MediaType.APPLICATION_JSON));
+        for (int i = 0; i < MAX_RETRIES; i++) {
+            try {
+                Response r = target.path(userId1).queryParam(RestShorts.PWD, pwd).path(userId2 + RestShorts.FOLLOWERS)
+                        .request().post(Entity.entity(isFollowing, MediaType.APPLICATION_JSON));
 
-        var status = r.getStatus();
-        if (status != Status.OK.getStatusCode())
-            return Result.error(getErrorCodeFrom(status));
-        else
-            return Result.ok();
+                var status = r.getStatus();
+                if (status != Status.OK.getStatusCode())
+                    return Result.error(getErrorCodeFrom(status));
+                else
+                    return Result.ok();
+            } catch (ProcessingException x) {
+                Log.info(x.getMessage());
+                tukano.utils.Sleep.ms(RETRY_SLEEP);
+            } catch (Exception x) {
+                x.printStackTrace();
+            }
+        }
+        return Result.error(ErrorCode.TIMEOUT);
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public Result<List<String>> followers(String userId, String pwd) {
-        Response r = target.path(userId).queryParam(RestShorts.PWD, pwd).path(RestShorts.FOLLOWERS)
-                .request().accept(MediaType.APPLICATION_JSON).get();
+        for (int i = 0; i < MAX_RETRIES; i++) {
+            try {
+                Response r = target.path(userId).queryParam(RestShorts.PWD, pwd).path(RestShorts.FOLLOWERS)
+                        .request().accept(MediaType.APPLICATION_JSON).get();
 
-        var status = r.getStatus();
-        if (status != Status.OK.getStatusCode())
-            return Result.error(getErrorCodeFrom(status));
-        else
-            return Result.ok(r.readEntity(List.class));
+                var status = r.getStatus();
+                if (status != Status.OK.getStatusCode())
+                    return Result.error(getErrorCodeFrom(status));
+                else
+                    return Result.ok(r.readEntity(List.class));
+            } catch (ProcessingException x) {
+                Log.info(x.getMessage());
+                tukano.utils.Sleep.ms(RETRY_SLEEP);
+            } catch (Exception x) {
+                x.printStackTrace();
+            }
+        }
+        return Result.error(ErrorCode.TIMEOUT);
     }
 
     @Override
     public Result<Void> like(String shortId, String userId, boolean isLiked, String pwd) {
-        Response r = target.path(shortId).path(userId).queryParam(RestShorts.PWD, pwd).path(RestShorts.LIKES)
-                .request().post(Entity.json(null));
+        for (int i = 0; i < MAX_RETRIES; i++) {
+            try {
+                Response r = target.path(shortId).path(userId).queryParam(RestShorts.PWD, pwd).path(RestShorts.LIKES)
+                        .request().post(Entity.json(null));
 
-        var status = r.getStatus();
-        if (status != Status.OK.getStatusCode())
-            return Result.error(getErrorCodeFrom(status));
-        else
-            return Result.ok();
+                var status = r.getStatus();
+                if (status != Status.OK.getStatusCode())
+                    return Result.error(getErrorCodeFrom(status));
+                else
+                    return Result.ok();
+            } catch (ProcessingException x) {
+                Log.info(x.getMessage());
+                tukano.utils.Sleep.ms(RETRY_SLEEP);
+            } catch (Exception x) {
+                x.printStackTrace();
+            }
+        }
+        return Result.error(ErrorCode.TIMEOUT);
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public Result<List<String>> likes(String shortId, String pwd) {
-        Response r = target.path(shortId).queryParam(RestShorts.PWD, pwd).path(RestShorts.LIKES)
-                .request().accept(MediaType.APPLICATION_JSON).get();
+        for (int i = 0; i < MAX_RETRIES; i++) {
+            try {
+                Response r = target.path(shortId).queryParam(RestShorts.PWD, pwd).path(RestShorts.LIKES)
+                        .request().accept(MediaType.APPLICATION_JSON).get();
 
-        var status = r.getStatus();
-        if (status != Status.OK.getStatusCode())
-            return Result.error(getErrorCodeFrom(status));
-        else
-            return Result.ok(r.readEntity(List.class));
+                var status = r.getStatus();
+                if (status != Status.OK.getStatusCode())
+                    return Result.error(getErrorCodeFrom(status));
+                else
+                    return Result.ok(r.readEntity(List.class));
+            } catch (ProcessingException x) {
+                Log.info(x.getMessage());
+                tukano.utils.Sleep.ms(RETRY_SLEEP);
+            } catch (Exception x) {
+                x.printStackTrace();
+            }
+        }
+        return Result.error(ErrorCode.TIMEOUT);
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public Result<List<String>> getFeed(String userId, String pwd) {
-        Response r = target.path(userId).queryParam(RestShorts.PWD, pwd).path(RestShorts.FEED)
-                .request().accept(MediaType.APPLICATION_JSON).get();
+        for (int i = 0; i < MAX_RETRIES; i++) {
+            try {
+                Response r = target.path(userId).queryParam(RestShorts.PWD, pwd).path(RestShorts.FEED)
+                        .request().accept(MediaType.APPLICATION_JSON).get();
 
-        var status = r.getStatus();
-        if (status != Status.OK.getStatusCode())
-            return Result.error(getErrorCodeFrom(status));
-        else
-            return Result.ok(r.readEntity(List.class));
+                var status = r.getStatus();
+                if (status != Status.OK.getStatusCode())
+                    return Result.error(getErrorCodeFrom(status));
+                else
+                    return Result.ok(r.readEntity(List.class));
+            } catch (ProcessingException x) {
+                Log.info(x.getMessage());
+                tukano.utils.Sleep.ms(RETRY_SLEEP);
+            } catch (Exception x) {
+                x.printStackTrace();
+            }
+        }
+        return Result.error(ErrorCode.TIMEOUT);
     }
 
     @Override
     public Result<Void> deleteAllAboutUser(String userId, String pwd) {
-        Response r = target.path(userId).queryParam(RestShorts.PWD, pwd).path(RestShorts.DELETE)
-                .request().delete();
+        for (int i = 0; i < MAX_RETRIES; i++) {
+            try {
+                Response r = target.path(userId).queryParam(RestShorts.PWD, pwd).path(RestShorts.DELETE)
+                        .request().delete();
 
-        var status = r.getStatus();
-        if (status != Status.OK.getStatusCode())
-            return Result.error(getErrorCodeFrom(status));
-        else
-            return Result.ok();
+                var status = r.getStatus();
+                if (status != Status.OK.getStatusCode())
+                    return Result.error(getErrorCodeFrom(status));
+                else
+                    return Result.ok();
+            } catch (ProcessingException x) {
+                Log.info(x.getMessage());
+                tukano.utils.Sleep.ms(RETRY_SLEEP);
+            } catch (Exception x) {
+                x.printStackTrace();
+            }
+        }
+        return Result.error(ErrorCode.TIMEOUT);
     }
 
     public static ErrorCode getErrorCodeFrom(int status) {

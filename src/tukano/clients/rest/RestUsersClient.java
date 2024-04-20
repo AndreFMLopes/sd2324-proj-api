@@ -79,15 +79,26 @@ public class RestUsersClient implements Users{
 
 	@Override
 	public Result<User> getUser(String userId, String pwd) {
-		Response r = target.path( userId )
-				.queryParam(RestUsers.PWD, pwd).request()
-				.get();
+		for (int i = 0; i < MAX_RETRIES; i++) {
+			try {
+				Response r = target.path( userId )
+						.queryParam(RestUsers.PWD, pwd).request()
+						.get();
 
-		var status = r.getStatus();
-		if( status != Status.OK.getStatusCode() )
-			return Result.error( getErrorCodeFrom(status));
-		else
-			return Result.ok( r.readEntity( User.class ));
+				var status = r.getStatus();
+				if( status != Status.OK.getStatusCode() )
+					return Result.error( getErrorCodeFrom(status));
+				else
+					return Result.ok( r.readEntity( User.class ));
+			} catch (ProcessingException x) {
+				Log.info(x.getMessage());
+
+				tukano.utils.Sleep.ms(RETRY_SLEEP);
+			} catch (Exception x) {
+				x.printStackTrace();
+			}
+		}
+		return Result.error(ErrorCode.TIMEOUT);
 	}
 	
 	/**@Override
@@ -105,42 +116,73 @@ public class RestUsersClient implements Users{
 
 	@Override
 	public Result<User> updateUser(String userId, String pwd, User user) {
-		Response r = target.path(userId)
+		for (int i = 0; i < MAX_RETRIES; i++) {
+			try {
+				Response r = target.path(userId)
 						.queryParam(RestUsers.PWD, pwd).request()
 						.accept(MediaType.APPLICATION_JSON)
 						.put(Entity.entity(user, MediaType.APPLICATION_JSON));
 
-		var status = r.getStatus();
-		if( status != Status.OK.getStatusCode() )
-			return Result.error( getErrorCodeFrom(status));
-		else
-			return Result.ok( r.readEntity( User.class ));
+				var status = r.getStatus();
+				if( status != Status.OK.getStatusCode() )
+					return Result.error( getErrorCodeFrom(status));
+				else
+					return Result.ok( r.readEntity( User.class ));
+			} catch (ProcessingException x) {
+				Log.info(x.getMessage());
+
+				tukano.utils.Sleep.ms(RETRY_SLEEP);
+			} catch (Exception x) {
+				x.printStackTrace();
+			}
+		}
+		return Result.error(ErrorCode.TIMEOUT);
 	}
 
 	@Override
 	public Result<User> deleteUser(String userId, String pwd) {
-		Response r = target.path(userId)
+		for (int i = 0; i < MAX_RETRIES; i++) {
+			try {
+				Response r = target.path(userId)
 						.queryParam(RestUsers.PWD, pwd).request()
 						.accept(MediaType.APPLICATION_JSON)
 						.delete();
 
-		var status = r.getStatus();
-		if( status != Status.OK.getStatusCode() )
-			return Result.error( getErrorCodeFrom(status));
-		else
-			return Result.ok( r.readEntity( User.class ));
+				var status = r.getStatus();
+				if( status != Status.OK.getStatusCode() )
+					return Result.error( getErrorCodeFrom(status));
+				else
+					return Result.ok( r.readEntity( User.class ));
+			} catch (ProcessingException x) {
+				Log.info(x.getMessage());
+				tukano.utils.Sleep.ms(RETRY_SLEEP);
+			} catch (Exception x) {
+				x.printStackTrace();
+			}
+		}
+		return Result.error(ErrorCode.TIMEOUT);
 	}
 
 	@Override
 	public Result<List<User>> searchUsers(String pattern) {
-		Response r = target.queryParam(RestUsers.QUERY, pattern)
+		for (int i = 0; i < MAX_RETRIES; i++) {
+			try {
+				Response r = target.queryParam(RestUsers.QUERY, pattern)
 						.request().accept(MediaType.APPLICATION_JSON).get();
 
-		var status = r.getStatus();
-		if( status != Status.OK.getStatusCode() )
-			return Result.error( getErrorCodeFrom(status));
-		else
-			return Result.ok( r.readEntity( new GenericType<List<User>>() {}));
+				var status = r.getStatus();
+				if( status != Status.OK.getStatusCode() )
+					return Result.error( getErrorCodeFrom(status));
+				else
+					return Result.ok( r.readEntity( new GenericType<List<User>>() {}));
+			} catch (ProcessingException x) {
+				Log.info(x.getMessage());
+				tukano.utils.Sleep.ms(RETRY_SLEEP);
+			} catch (Exception x) {
+				x.printStackTrace();
+			}
+		}
+		return Result.error(ErrorCode.TIMEOUT);
 	}
 
 	public static ErrorCode getErrorCodeFrom(int status) {
